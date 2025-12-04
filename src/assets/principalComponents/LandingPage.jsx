@@ -39,7 +39,7 @@ export default function LandingPage() {
               </h1>
               <div className="w-24 h-px bg-primary mx-auto mb-8"></div>
             </motion.div>
-            
+
             <motion.p
               className="text-2xl font-light text-base-content/80 mb-4"
               initial={{ opacity: 0 }}
@@ -48,15 +48,15 @@ export default function LandingPage() {
             >
               Moda Contemporánea
             </motion.p>
-            
+
             <motion.p
               className="text-lg text-base-content/60 max-w-2xl mx-auto mb-12 leading-relaxed"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 1, delay: 0.5 }}
             >
-              Descubra nuestra colección exclusiva de prendas premium, 
-              diseñadas para el estilo de vida moderno y sofisticado.
+              Descubra nuestra colección exclusiva de prendas premium, diseñadas
+              para el estilo de vida moderno y sofisticado.
             </motion.p>
 
             <motion.div
@@ -93,15 +93,18 @@ export default function LandingPage() {
             {[
               {
                 title: "Calidad Premium",
-                description: "Tejidos selectos y confección artesanal para garantizar durabilidad y elegancia.",
+                description:
+                  "Tejidos selectos y confección artesanal para garantizar durabilidad y elegancia.",
               },
               {
                 title: "Diseño Atemporal",
-                description: "Colecciones que trascienden tendencias, perfecto balance entre clásico y contemporáneo.",
+                description:
+                  "Colecciones que trascienden tendencias, perfecto balance entre clásico y contemporáneo.",
               },
               {
                 title: "Experiencia Única",
-                description: "Servicio personalizado y atención al detalle en cada compra.",
+                description:
+                  "Servicio personalizado y atención al detalle en cada compra.",
               },
             ].map((feature, index) => (
               <motion.div
@@ -132,17 +135,14 @@ export default function LandingPage() {
         whileInView="onscreen"
         viewport={{ amount: 0.5 }}
       >
-        <motion.div
-          className="text-center max-w-3xl"
-          variants={cardVariants}
-        >
+        <motion.div className="text-center max-w-3xl" variants={cardVariants}>
           <h2 className="text-5xl font-light mb-6 text-base-content tracking-wide">
             Explore Nuestra Colección
           </h2>
           <div className="w-16 h-px bg-primary mx-auto mb-8"></div>
           <p className="text-xl text-base-content/70 mb-12 leading-relaxed">
-            Prendas cuidadosamente seleccionadas para su guardarropa. 
-            Cada pieza cuenta una historia de elegancia y distinción.
+            Prendas cuidadosamente seleccionadas para su guardarropa. Cada pieza
+            cuenta una historia de elegancia y distinción.
           </p>
           <motion.button
             className="btn btn-primary btn-lg px-12 text-lg font-light tracking-wider"
@@ -162,11 +162,8 @@ export default function LandingPage() {
         whileInView="onscreen"
         viewport={{ amount: 0.5 }}
       >
-        <motion.div
-          className="text-center"
-          variants={cardVariants}
-        >
-          <h1 
+        <motion.div className="text-center" variants={cardVariants}>
+          <h1
             className="text-base-content font-extralight tracking-[0.3em] mb-8"
             style={{
               fontSize: "clamp(3rem, 15vw, 12rem)",

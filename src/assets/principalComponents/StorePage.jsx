@@ -77,9 +77,9 @@ export default function StorePage() {
             whileHover={{ y: -8 }}
           >
             <figure className="relative overflow-hidden aspect-[3/4]">
-              <img 
-                src={card.image} 
-                alt={card.title} 
+              <img
+                src={card.image}
+                alt={card.title}
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
               />
             </figure>
@@ -87,7 +87,9 @@ export default function StorePage() {
               <h2 className="card-title text-xl font-light text-base-content tracking-wide">
                 {card.title}
               </h2>
-              <p className="text-primary font-light text-lg mb-2">{card.price}</p>
+              <p className="text-primary font-light text-lg mb-2">
+                {card.price}
+              </p>
               <div className="card-actions justify-end mt-4">
                 <button className="btn btn-primary btn-sm font-light tracking-wide">
                   VER DETALLES
@@ -136,7 +138,9 @@ export default function StorePage() {
                   <h2 className="text-3xl font-light text-base-content tracking-wide mb-2">
                     {selectedCard.title}
                   </h2>
-                  <p className="text-2xl text-primary font-light mb-6">{selectedCard.price}</p>
+                  <p className="text-2xl text-primary font-light mb-6">
+                    {selectedCard.price}
+                  </p>
                   <div className="w-12 h-px bg-primary/30 mb-6"></div>
                   <p className="text-lg text-base-content/80 leading-relaxed mb-8">
                     {selectedCard.description}
