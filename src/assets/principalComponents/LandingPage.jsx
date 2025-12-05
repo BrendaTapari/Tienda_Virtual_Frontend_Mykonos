@@ -1,5 +1,6 @@
 import { useLocation } from "wouter";
 import * as motion from "motion/react-client";
+import InteractiveBackground from "./InteractiveBackground";
 
 export default function LandingPage() {
   const [location, setLocation] = useLocation();
@@ -24,9 +25,19 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="bg-base-100" style={{ marginTop: "-64px" }}>
+    <div 
+      className="bg-base-100" 
+      style={{ 
+        marginTop: "-64px",
+        scrollSnapType: "y mandatory",
+        overflowY: "scroll",
+        height: "100vh"
+      }}
+    >
       {/* Hero Section - Elegante y Minimalista */}
-      <div className="hero min-h-screen bg-gradient-to-br from-base-200 to-base-300">
+      <div className="hero min-h-screen bg-gradient-to-br from-base-200 to-base-300 relative overflow-hidden" style={{ scrollSnapAlign: "start" }}>
+        {/* Fondo Interactivo con Flechitas */}
+        <InteractiveBackground />
         <div className="hero-content text-center">
           <div className="max-w-4xl">
             <motion.div
@@ -73,6 +84,7 @@ export default function LandingPage() {
       {/* Call to Action Section */}
       <motion.div
         className="min-h-screen flex items-center justify-center bg-base-100 px-4"
+        style={{ scrollSnapAlign: "start" }}
         initial="offscreen"
         whileInView="onscreen"
         viewport={{ amount: 0.5 }}
@@ -100,6 +112,7 @@ export default function LandingPage() {
       {/* Features Section */}
       <motion.div
         className="min-h-screen bg-base-200 py-20 px-4"
+        style={{ scrollSnapAlign: "start" }}
         initial="offscreen"
         whileInView="onscreen"
         viewport={{ amount: 0.3 }}
@@ -156,7 +169,7 @@ export default function LandingPage() {
       </motion.div>
 
       {/* Informacion Sucursales*/}
-      <div className="bg-base-100 py-20 px-4">
+      <div className="bg-base-100 py-20 px-4 min-h-screen" style={{ scrollSnapAlign: "start" }}>
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -174,7 +187,7 @@ export default function LandingPage() {
             </p>
           </motion.div>
 
-          {/* Sucursal 1 - Desde la izquierda */}
+          {/* Sucursal 1 */}
           <motion.div
             initial={{ opacity: 0, x: -100 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -219,7 +232,7 @@ export default function LandingPage() {
             </div>
           </motion.div>
 
-          {/* Sucursal 2 - Desde la derecha */}
+          {/* Sucursal 2 */}
           <motion.div
             initial={{ opacity: 0, x: 100 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -268,6 +281,7 @@ export default function LandingPage() {
       {/* Brand Statement Section */}
       <motion.div
         className="min-h-screen flex items-center justify-center bg-gradient-to-br from-base-300 to-base-200 px-4"
+        style={{ scrollSnapAlign: "start" }}
         initial="offscreen"
         whileInView="onscreen"
         viewport={{ amount: 0.5 }}
