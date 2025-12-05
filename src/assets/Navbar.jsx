@@ -45,6 +45,10 @@ export default function Navbar() {
     setLocation("/store");
   };
 
+  const goToLogin = () => {
+    setLocation("/login");
+  }
+
   return (
     <motion.div
       className="navbar bg-base-100 shadow-sm fixed top-0 left-0 right-0 z-50"
@@ -133,7 +137,7 @@ export default function Navbar() {
               <li>
                 <a>Configuración</a>
               </li>
-              <li>
+              <li onClick={goToLogin}>
                 <a>Cerrar sesión</a>
               </li>
             </ul>
