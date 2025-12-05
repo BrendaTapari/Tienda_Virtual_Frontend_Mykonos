@@ -70,6 +70,33 @@ export default function LandingPage() {
         </div>
       </div>
 
+      {/* Call to Action Section */}
+      <motion.div
+        className="min-h-screen flex items-center justify-center bg-base-100 px-4"
+        initial="offscreen"
+        whileInView="onscreen"
+        viewport={{ amount: 0.5 }}
+      >
+        <motion.div className="text-center max-w-3xl" variants={cardVariants}>
+          <h2 className="text-5xl font-light mb-6 text-base-content tracking-wide">
+            Explore Nuestra Colección
+          </h2>
+          <div className="w-16 h-px bg-primary mx-auto mb-8"></div>
+          <p className="text-xl text-base-content/70 mb-12 leading-relaxed">
+            Prendas cuidadosamente seleccionadas para su guardarropa. Cada pieza
+            cuenta una historia de elegancia y distinción.
+          </p>
+          <motion.button
+            className="btn btn-primary btn-lg px-12 text-lg font-light tracking-wider"
+            onClick={goToStore}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            VISITAR TIENDA
+          </motion.button>
+        </motion.div>
+      </motion.div>
+
       {/* Features Section */}
       <motion.div
         className="min-h-screen bg-base-200 py-20 px-4"
@@ -128,32 +155,115 @@ export default function LandingPage() {
         </div>
       </motion.div>
 
-      {/* Call to Action Section */}
-      <motion.div
-        className="min-h-screen flex items-center justify-center bg-base-100 px-4"
-        initial="offscreen"
-        whileInView="onscreen"
-        viewport={{ amount: 0.5 }}
-      >
-        <motion.div className="text-center max-w-3xl" variants={cardVariants}>
-          <h2 className="text-5xl font-light mb-6 text-base-content tracking-wide">
-            Explore Nuestra Colección
-          </h2>
-          <div className="w-16 h-px bg-primary mx-auto mb-8"></div>
-          <p className="text-xl text-base-content/70 mb-12 leading-relaxed">
-            Prendas cuidadosamente seleccionadas para su guardarropa. Cada pieza
-            cuenta una historia de elegancia y distinción.
-          </p>
-          <motion.button
-            className="btn btn-primary btn-lg px-12 text-lg font-light tracking-wider"
-            onClick={goToStore}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.98 }}
+      {/* Informacion Sucursales*/}
+      <div className="bg-base-100 py-20 px-4">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ amount: 0.3 }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-20"
           >
-            VISITAR TIENDA
-          </motion.button>
-        </motion.div>
-      </motion.div>
+            <h2 className="text-5xl font-light tracking-widest mb-4 text-base-content">
+              NUESTRAS SUCURSALES
+            </h2>
+            <div className="w-16 h-px bg-primary mx-auto mb-6"></div>
+            <p className="text-base-content/70 text-lg font-light">
+              Visite nuestras boutiques
+            </p>
+          </motion.div>
+
+          {/* Sucursal 1 - Desde la izquierda */}
+          <motion.div
+            initial={{ opacity: 0, x: -100 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ amount: 0.5, once: false }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="mb-32"
+          >
+            <div className="card lg:card-side bg-base-100 shadow-xl">
+              <figure className="lg:w-1/2">
+                <img
+                  src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80"
+                  alt="Sucursal Centro"
+                  className="w-full h-full object-cover"
+                />
+              </figure>
+              <div className="card-body lg:w-1/2 justify-center">
+                <h3 className="card-title text-3xl font-light tracking-wide text-base-content">
+                  MYKONOS PARANÁ
+                </h3>
+                <div className="w-12 h-px bg-primary/50 my-4"></div>
+                <p className="text-base-content/80 text-lg leading-relaxed mb-4">
+                  Nuestra boutique insignia ubicada en el corazón de la ciudad.
+                  Un espacio elegante donde la moda contemporánea cobra vida.
+                </p>
+                <div className="space-y-2 text-base-content/70">
+                  <p className="flex items-center gap-2">
+                    <span className="font-light">📍</span>
+                    <span>Peatonal San Martin 695, Paraná, Entre Ríos</span>
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <span className="font-light">📞</span>
+                    <span>+54 9 343 509 1341</span>
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <div className="flex">
+                      <span className="font-light">🕐</span>
+                      <span>Lunes a Sábado 8:30 a 12:30 16:30 a 20:30hs</span>
+                    </div>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Sucursal 2 - Desde la derecha */}
+          <motion.div
+            initial={{ opacity: 0, x: 100 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ amount: 0.5, once: false }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="mb-20"
+          >
+            <div className="card lg:card-side bg-base-100 shadow-xl">
+              <div className="card-body lg:w-1/2 justify-center lg:order-1">
+                <h3 className="card-title text-3xl font-light tracking-wide text-base-content">
+                  MYKONOS CONCORDIA
+                </h3>
+                <div className="w-12 h-px bg-primary/50 my-4"></div>
+                <p className="text-base-content/80 text-lg leading-relaxed mb-4">
+                  Nuestra sucursal a pasos de la peatonal Concordia. Un espacio
+                  diseñado para ofrecer una experiencia de compra exclusiva y
+                  personalizada.
+                </p>
+                <div className="space-y-2 text-base-content/70">
+                  <p className="flex items-center gap-2">
+                    <span className="font-light">📍</span>
+                    <span>A. del Valle 26, Concordia, Entre Ríos</span>
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <span className="font-light">📞</span>
+                    <span>+54 9 345 5201 623</span>
+                  </p>
+                  <p className="flex items-center gap-2">
+                    <span className="font-light">🕐</span>
+                    <span>Lunes a Sábado 8:30 a 12:30 16:30 a 20:30hs</span>
+                  </p>
+                </div>
+              </div>
+              <figure className="lg:w-1/2 lg:order-2">
+                <img
+                  src="https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?w=800&q=80"
+                  alt="Sucursal Plaza"
+                  className="w-full h-full object-cover"
+                />
+              </figure>
+            </div>
+          </motion.div>
+        </div>
+      </div>
 
       {/* Brand Statement Section */}
       <motion.div

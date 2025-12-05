@@ -57,16 +57,22 @@ export default function Navbar() {
     >
       <div className="flex-1">
         <a
-          className="btn btn-ghost text-3xl tracking-wider font-semibold"
+          className="btn btn-ghost text-3xl font-light tracking-widest mb-4 text-base-content"
           onClick={goHome}
         >
-          Mykonos
+          MYKONOS
         </a>
       </div>
-      <div className="flex gap-4">
-        <button className="btn btn-outline btn-primary" onClick={goToStore}>
-          Tienda
-        </button>
+      <div className="flex gap-4 items-center">
+        <motion.button
+          className="btn btn-ghost font-light tracking-widest text-base-content hover:text-primary transition-colors relative group"
+          onClick={goToStore}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          TIENDA
+          <span className="absolute bottom-0 left-0 w-0 h-px bg-primary transition-all duration-300 group-hover:w-full"></span>
+        </motion.button>
         <label className="swap swap-rotate">
           <input
             type="checkbox"
