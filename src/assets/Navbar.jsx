@@ -64,6 +64,11 @@ export default function Navbar() {
     setMobileMenuOpen(false);
   };
 
+  const goToContactUs = () => {
+    setLocation("/contact-us");
+    setMobileMenuOpen(false);
+  }
+
   return (
     <>
       <motion.div
@@ -241,6 +246,18 @@ export default function Navbar() {
                 animate={{ scaleX: 1 }}
                 transition={{ delay: 0.15 }}
               ></motion.div>
+              
+              <motion.button
+                className="btn btn-ghost btn-lg justify-start font-light tracking-widest text-base-content text-xl"
+                onClick={goToContactUs}
+                initial={{ x: 50, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.1 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Contactanos
+              </motion.button>
+
 
               {/* Cart */}
               <motion.div
