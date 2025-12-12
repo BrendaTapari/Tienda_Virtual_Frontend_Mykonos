@@ -175,7 +175,7 @@ export default function StorePage() {
                         {product.nombre_web}
                       </h2>
                       <p className="text-primary font-light text-lg mb-2">
-                        ${product.precio_web.toFixed(2)}
+                        ${(product.precio_web || product.sale_price || 0).toFixed(2)}
                       </p>
                       
                       {/* Colors */}
@@ -269,7 +269,7 @@ export default function StorePage() {
                     {selectedCard.nombre_web}
                   </h2>
                   <p className="text-2xl text-primary font-light mb-6">
-                    ${selectedCard.precio_web.toFixed(2)}
+                    ${(selectedCard.precio_web || selectedCard.sale_price || 0).toFixed(2)}
                   </p>
                   <div className="w-12 h-px bg-primary/30 mb-6"></div>
                   <p className="text-lg text-base-content/80 leading-relaxed mb-8">

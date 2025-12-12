@@ -1,4 +1,4 @@
-import { Moon, ShoppingCart, Sun, Menu, X } from "lucide-react";
+import { Moon, ShoppingCart, Sun, Menu, X, User, Shield } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import {
@@ -7,8 +7,10 @@ import {
   useMotionValueEvent,
   AnimatePresence,
 } from "motion/react";
+import { useAuth } from "./context/AuthContext";
 
 export default function Navbar() {
+  const { user, isAuthenticated, isAdmin, logout } = useAuth();
   const [theme, setTheme] = useState(
     localStorage.getItem("theme") || "lightMykonos"
   );
@@ -76,6 +78,17 @@ export default function Navbar() {
 
   const goToMyPurchases = () => {
     setLocation("/my-purchases");
+    setMobileMenuOpen(false);
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    setLocation("/");
+    setMobileMenuOpen(false);
+  };
+
+  const goToAdminPanel = () => {
+    setLocation("/admin");
     setMobileMenuOpen(false);
   };
 
@@ -174,33 +187,59 @@ export default function Navbar() {
                 </div>
               </div>
             </div>
+            
+            {/* User Section */}
             <div className="dropdown dropdown-end">
-              <div
-                tabIndex={0}
-                role="button"
-                className="btn btn-ghost btn-circle avatar"
-              >
-                <div className="w-10 rounded-full">
-                  <img
-                    alt="Tailwind CSS Navbar component"
-                    src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
-                  />
-                </div>
-              </div>
-              <ul
-                tabIndex="-1"
-                className="menu menu-md dropdown-content bg-base-200 rounded-box z-1 mt-3 w-52 p-2 shadow"
-              >
-                <li onClick={goToInfoProfile}>
-                  <a className="justify-between">Perfil</a>
-                </li>
-                <li>
-                  <a>Configuración</a>
-                </li>
-                <li onClick={goToLogin}>
-                  <a>Cerrar sesión</a>
-                </li>
-              </ul>
+              {isAuthenticated ? (
+                <>
+                  <div
+                    tabIndex={0}
+                    role="button"
+                    className={`btn btn-ghost gap-2 ${
+                      isAdmin ? "text-warning" : "text-info"
+                    }`}
+                    onClick={goToInfoProfile}
+                  >
+                    {isAdmin ? <Shield size={20} /> : <User size={20} />}
+                    <span className="font-medium">{user?.username || user?.fullname}</span>
+                    {isAdmin && <span className="badge badge-warning badge-sm">ADMIN</span>}
+                  </div>
+                  <ul
+                    tabIndex={0}
+                    className="menu menu-md dropdown-content bg-base-200 rounded-box z-[1] mt-3 w-52 p-2 shadow"
+                  >
+                    <li onClick={goToInfoProfile}>
+                      <a className="justify-between">
+                        <span>Perfil</span>
+                        <User size={16} />
+                      </a>
+                    </li>
+                    {isAdmin && (
+                      <li onClick={goToAdminPanel}>
+                        <a className="justify-between text-warning">
+                          <span>Panel Admin</span>
+                          <Shield size={16} />
+                        </a>
+                      </li>
+                    )}
+                    <li onClick={goToMyPurchases}>
+                      <a>Mis Compras</a>
+                    </li>
+                    <div className="divider my-1"></div>
+                    <li onClick={handleLogout}>
+                      <a className="text-error">Cerrar sesión</a>
+                    </li>
+                  </ul>
+                </>
+              ) : (
+                <button
+                  onClick={goToLogin}
+                  className="btn btn-primary gap-2"
+                >
+                  <User size={20} />
+                  Iniciar Sesión
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -338,36 +377,63 @@ export default function Navbar() {
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.25 }}
               >
-                <div className="flex items-center gap-3 p-4 bg-base-200 rounded-lg">
-                  <div className="avatar">
-                    <div className="w-12 rounded-full">
-                      <img
-                        alt="Profile"
-                        src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
-                      />
+                {isAuthenticated ? (
+                  <>
+                    <div 
+                      className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer ${
+                        isAdmin ? "bg-warning/10" : "bg-info/10"
+                      }`}
+                      onClick={goToInfoProfile}
+                    >
+                      <div className={`avatar placeholder`}>
+                        <div className={`w-12 rounded-full ${
+                          isAdmin ? "bg-warning text-warning-content" : "bg-info text-info-content"
+                        }`}>
+                          {isAdmin ? <Shield size={24} /> : <User size={24} />}
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold">{user?.username || user?.fullname}</p>
+                        <p className={`text-sm ${isAdmin ? "text-warning" : "text-info"}`}>
+                          {isAdmin ? "Administrador" : "Cliente"}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-semibold">Mi Cuenta</p>
-                    <p className="text-sm text-base-content/70">Ver perfil</p>
-                  </div>
-                </div>
 
-                <button
-                  className="btn btn-ghost justify-start"
-                  onClick={goToInfoProfile}
-                >
-                  Perfil
-                </button>
-                <button className="btn btn-ghost justify-start">
-                  Configuración
-                </button>
-                <button
-                  className="btn btn-ghost justify-start text-error"
-                  onClick={goToLogin}
-                >
-                  Cerrar sesión
-                </button>
+                    <button
+                      className="btn btn-ghost justify-start"
+                      onClick={goToInfoProfile}
+                    >
+                      <User size={18} />
+                      Perfil
+                    </button>
+                    
+                    {isAdmin && (
+                      <button
+                        className="btn btn-ghost justify-start text-warning"
+                        onClick={goToAdminPanel}
+                      >
+                        <Shield size={18} />
+                        Panel Admin
+                      </button>
+                    )}
+                    
+                    <button
+                      className="btn btn-ghost justify-start text-error"
+                      onClick={handleLogout}
+                    >
+                      Cerrar sesión
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    className="btn btn-primary btn-lg"
+                    onClick={goToLogin}
+                  >
+                    <User size={20} />
+                    Iniciar Sesión
+                  </button>
+                )}
               </motion.div>
             </div>
           </motion.div>

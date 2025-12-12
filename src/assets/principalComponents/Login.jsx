@@ -2,10 +2,12 @@ import { motion } from "motion/react";
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "../context/AuthContext";
+import { Eye, EyeClosed } from "lucide-react";
 
 export default function Login() {
   const [location, setLocation] = useLocation();
   const { login, isLoading, error, setError } = useAuth();
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
@@ -35,6 +37,9 @@ export default function Login() {
     alert("Google login will be available soon!");
   };
 
+  const handleWatchPassword = () => {
+    setPasswordVisible(!passwordVisible);
+  };
   return (
     <div className="min-h-screen bg-base-200 flex items-center justify-center px-4 py-12">
       <motion.div
@@ -110,16 +115,25 @@ export default function Login() {
                     Contraseña
                   </span>
                 </label>
-                <input
-                  type="password"
-                  placeholder="••••••••"
-                  className="input input-bordered w-full font-light bg-base-200 focus:outline-none focus:border-primary transition-colors"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  disabled={isLoading}
-                  minLength={6}
-                />
+                <div className="relative">
+                  <input
+                    type={passwordVisible ? "text" : "password"}
+                    placeholder="••••••••"
+                    className="input input-bordered w-full font-light bg-base-200 focus:outline-none focus:border-primary transition-colors pr-12"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    disabled={isLoading}
+                    minLength={6}
+                  />
+                  <button 
+                    type="button"
+                    onClick={handleWatchPassword} 
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-base-content/60 hover:text-primary transition-colors"
+                  >
+                    {passwordVisible ? <Eye size={20} /> : <EyeClosed size={20} />}
+                  </button>
+                </div>
                 <label className="label">
                   <a
                     href="#"

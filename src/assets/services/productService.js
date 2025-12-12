@@ -1,11 +1,19 @@
 import axios from "axios";
+import { getAuthToken } from "./authService";
 
 const API_URL = import.meta.env.VITE_API_URL + "/products";
 
+// ============================================================================
+// PUBLIC / USER-FACING ENDPOINTS
+// ============================================================================
 
+/**
+ * Fetch all products available in online store
+ * @returns {Promise<Array>} Array of online store products
+ */
 const fetchProducts = async () => {
   try {
-    const response = await axios.get(`${API_URL}/productos`);
+    const response = await axios.get(`${API_URL}`);
     return response.data;
   } catch (error) {
     console.error("Error fetching products:", error);
@@ -13,7 +21,11 @@ const fetchProducts = async () => {
   }
 };
 
-
+/**
+ * Fetch product by ID
+ * @param {number} productId - Product ID
+ * @returns {Promise<Object>} Product details
+ */
 const fetchProductById = async (productId) => {
   try {
     const response = await axios.get(`${API_URL}/${productId}`);
@@ -24,17 +36,20 @@ const fetchProductById = async (productId) => {
   }
 };
 
-
+/**
+ * Fetch products by category (deprecated - use fetchProductsByGroupName)
+ * @param {string} category - Category name
+ * @returns {Promise<Array>} Array of products
+ */
 const fetchProductsByCategory = async (category) => {
   try {
     const response = await axios.get(`${API_URL}?category=${category}`);
     return response.data;
-    } catch (error) {
+  } catch (error) {
     console.error(`Error fetching products in category ${category}:`, error);
     throw error;
   }
 };
-
 
 /**
  * Fetch products by group name (hierarchical - includes all descendant groups)
@@ -51,6 +66,215 @@ const fetchProductsByGroupName = async (groupName) => {
   }
 };
 
+/**
+ * Fetch products for online store with pagination
+ * @param {string} category - Optional category filter
+ * @param {number} limit - Maximum number of products (default: 50)
+ * @param {number} offset - Number of products to skip (default: 0)
+ * @returns {Promise<Array>} Array of online store products
+ */
+const fetchOnlineStoreProducts = async (category = null, limit = 50, offset = 0) => {
+  try {
+    const params = new URLSearchParams();
+    if (category) params.append('category', category);
+    params.append('limit', limit);
+    params.append('offset', offset);
+    
+    const response = await axios.get(`${API_URL}/online-store?${params.toString()}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching online store products:", error);
+    throw error;
+  }
+};
 
+/**
+ * Fetch product by slug
+ * @param {string} slug - URL-friendly product slug
+ * @returns {Promise<Object>} Product details
+ */
+const fetchProductBySlug = async (slug) => {
+  try {
+    const response = await axios.get(`${API_URL}/online-store/${encodeURIComponent(slug)}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching product with slug ${slug}:`, error);
+    throw error;
+  }
+};
 
-export { fetchProducts, fetchProductById, fetchProductsByCategory, fetchProductsByGroupName };
+// ============================================================================
+// ADMIN-ONLY ENDPOINTS
+// ============================================================================
+
+/**
+ * Fetch ALL products (including those not in online store) - Admin only
+ * @param {string} providerCode - Optional provider code (barcode) to filter
+ * @returns {Promise<Array>} Array of all products
+ */
+const fetchAllProducts = async (providerCode = null) => {
+  try {
+    const token = getAuthToken();
+    if (!token) throw new Error("Authentication required");
+
+    const params = providerCode ? `?provider_code=${encodeURIComponent(providerCode)}` : '';
+    const response = await axios.get(`${API_URL}/all${params}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching all products:", error);
+    throw error.response?.data || error;
+  }
+};
+
+/**
+ * Create a new product - Admin only
+ * @param {Object} productData - Product data
+ * @returns {Promise<Object>} Created product
+ */
+const createProduct = async (productData) => {
+  try {
+    const token = getAuthToken();
+    if (!token) throw new Error("Authentication required");
+
+    const response = await axios.post(`${API_URL}/`, productData, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error creating product:", error);
+    throw error.response?.data || error;
+  }
+};
+
+/**
+ * Update an existing product - Admin only
+ * @param {number} productId - Product ID
+ * @param {Object} productData - Updated product data
+ * @returns {Promise<Object>} Updated product
+ */
+const updateProduct = async (productId, productData) => {
+  try {
+    const token = getAuthToken();
+    if (!token) throw new Error("Authentication required");
+
+    const response = await axios.put(`${API_URL}/${productId}`, productData, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Error updating product ${productId}:`, error);
+    throw error.response?.data || error;
+  }
+};
+
+/**
+ * Delete a product - Admin only
+ * @param {number} productId - Product ID
+ * @returns {Promise<void>}
+ */
+const deleteProduct = async (productId) => {
+  try {
+    const token = getAuthToken();
+    if (!token) throw new Error("Authentication required");
+
+    await axios.delete(`${API_URL}/${productId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  } catch (error) {
+    console.error(`Error deleting product ${productId}:`, error);
+    throw error.response?.data || error;
+  }
+};
+
+/**
+ * Toggle product online status and update web fields - Admin only
+ * @param {number} productId - Product ID
+ * @param {Object} data - Data to update
+ * @param {boolean} data.en_tienda_online - Whether product should be in online store
+ * @param {string} data.nombre_web - Product name for web (optional)
+ * @param {string} data.descripcion_web - Product description for web (optional)
+ * @param {number} data.precio_web - Product price for web (optional)
+ * @param {string} data.slug - URL-friendly slug (optional)
+ * @returns {Promise<Object>} Updated product
+ */
+const toggleProductOnline = async (productId, data) => {
+  try {
+    const token = getAuthToken();
+    if (!token) throw new Error("Authentication required");
+
+    const response = await axios.patch(`${API_URL}/${productId}/toggle-online`, data, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Error toggling product ${productId} online status:`, error);
+    throw error.response?.data || error;
+  }
+};
+
+/**
+ * Add image to product - Admin only
+ * @param {number} productId - Product ID
+ * @param {string} imageUrl - Image URL
+ * @returns {Promise<Object>} Created image record
+ */
+const addProductImage = async (productId, imageUrl) => {
+  try {
+    const token = getAuthToken();
+    if (!token) throw new Error("Authentication required");
+
+    const response = await axios.post(
+      `${API_URL}/${productId}/images`,
+      { image_url: imageUrl },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  } catch (error) {
+    console.error(`Error adding image to product ${productId}:`, error);
+    throw error.response?.data || error;
+  }
+};
+
+/**
+ * Delete product image - Admin only
+ * @param {number} imageId - Image ID
+ * @returns {Promise<void>}
+ */
+const deleteProductImage = async (imageId) => {
+  try {
+    const token = getAuthToken();
+    if (!token) throw new Error("Authentication required");
+
+    await axios.delete(`${API_URL.replace('/products', '')}/products/images/${imageId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  } catch (error) {
+    console.error(`Error deleting image ${imageId}:`, error);
+    throw error.response?.data || error;
+  }
+};
+
+// ============================================================================
+// EXPORTS
+// ============================================================================
+
+export { 
+  // Public endpoints
+  fetchProducts, 
+  fetchProductById, 
+  fetchProductsByCategory, 
+  fetchProductsByGroupName,
+  fetchOnlineStoreProducts,
+  fetchProductBySlug,
+  
+  // Admin endpoints
+  fetchAllProducts,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  toggleProductOnline,
+  addProductImage,
+  deleteProductImage
+};

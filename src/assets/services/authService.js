@@ -248,6 +248,15 @@ export const isAuthenticated = () => {
   return !!getAuthToken();
 };
 
+/**
+ * Check if current user is admin
+ * @returns {boolean} True if user has admin role
+ */
+export const isAdmin = () => {
+  const user = getUser();
+  return user?.role === "admin";
+};
+
 // TODO: Google OAuth Login
 // Implement when Google OAuth is configured
 // export const loginWithGoogle = async (googleToken) => {

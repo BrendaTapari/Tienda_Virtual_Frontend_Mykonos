@@ -14,10 +14,15 @@ import { AuthProvider } from "./assets/context/AuthContext.jsx";
 import MyPurchases from "./assets/principalComponents/MyPurchases.jsx";
 import EmailVerification from "./assets/supportComponents/EmailVerification.jsx";
 import OrderTracking from "./assets/principalComponents/OrderTracking.jsx";
+import ProtectedRoute from "./assets/components/ProtectedRoute.jsx";
+import AdminDashboard from "./assets/principalComponents/AdminDashboard.jsx";
+import AdminProductList from "./assets/principalComponents/AdminProductList.jsx";
+import AdminOrders from "./assets/principalComponents/AdminOrders.jsx";
+import AdminUsers from "./assets/principalComponents/AdminUsers.jsx";
 
 function App() {
   const [location] = useLocation();
-  const hideNavbar = location === "/email-verification";
+  const hideNavbar = location === "/email-verification" || location.startsWith("/admin");
 
   return (
     <>
@@ -33,6 +38,20 @@ function App() {
         <Route path="/my-purchases" component={MyPurchases} />
         <Route path="/email-verification" component={EmailVerification} />
         <Route path="/order-tracking/:orderId" component={OrderTracking} />
+        
+        {/* Admin Routes */}
+        <Route path="/admin">
+          {() => <ProtectedRoute component={AdminDashboard} />}
+        </Route>
+        <Route path="/admin/products">
+          {() => <ProtectedRoute component={AdminProductList} />}
+        </Route>
+        <Route path="/admin/orders">
+          {() => <ProtectedRoute component={AdminOrders} />}
+        </Route>
+        <Route path="/admin/users">
+          {() => <ProtectedRoute component={AdminUsers} />}
+        </Route>
       </div>
     </>
   );
