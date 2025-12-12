@@ -3,6 +3,13 @@ import * as motion from "motion/react-client";
 import InteractiveBackground from "./InteractiveBackground";
 import { useState, useRef, useEffect } from "react";
 
+// Import images
+import percheroConcordia from "../images/percheroConcordia.jpg";
+import fabricTextures from "../images/fabric_textures.png";
+import clothingDetails from "../images/clothing_details.png";
+import entreRios from "../images/entre_rios.jpg";
+import generalConcordia from "../images/generalConcordia.jpg";
+
 export default function LandingPage() {
   const [location, setLocation] = useLocation();
   const [activeSection, setActiveSection] = useState(0);
@@ -340,7 +347,7 @@ export default function LandingPage() {
               >
                 <div className="rounded-2xl overflow-hidden shadow-2xl">
                   <img
-                    src="/src/assets/images/percheroConcordia.jpg"
+                    src={percheroConcordia}
                     alt="Perchero de Concordia"
                     className="w-full h-auto object-cover"
                   />
@@ -361,7 +368,7 @@ export default function LandingPage() {
               >
                 <div className="rounded-2xl overflow-hidden shadow-2xl">
                   <img
-                    src="/src/assets/images/fabric_textures.png"
+                    src={fabricTextures}
                     alt="Texturas y Colores de Telas Premium"
                     className="w-full h-auto object-cover"
                   />
@@ -440,7 +447,7 @@ export default function LandingPage() {
               >
                 <div className="rounded-2xl overflow-hidden shadow-2xl">
                   <img
-                    src="/src/assets/images/clothing_details.png"
+                    src={clothingDetails}
                     alt="Detalles de Confección Premium"
                     className="w-full h-auto object-cover"
                   />
@@ -457,7 +464,7 @@ export default function LandingPage() {
           >
             <div className="relative h-64 sm:h-80 md:h-96">
               <img
-                src="/src/assets/images/entre_rios.jpg"
+                src={entreRios}
                 alt="Entre Ríos, Argentina"
                 className="w-full h-full object-cover"
               />
@@ -597,7 +604,7 @@ export default function LandingPage() {
               </div>
               <figure className="lg:w-1/2 lg:order-2 h-64 sm:h-80 lg:h-auto">
                 <img
-                  src="src/assets/images/generalConcordia.jpg"
+                  src={generalConcordia}
                   alt="Sucursal Plaza"
                   className="w-full h-full object-cover"
                 />
