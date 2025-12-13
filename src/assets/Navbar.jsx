@@ -8,9 +8,11 @@ import {
   AnimatePresence,
 } from "motion/react";
 import { useAuth } from "./context/AuthContext";
+import { useCart } from "./context/CartContext";
 
 export default function Navbar() {
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
+  const { itemCount } = useCart();
   const [theme, setTheme] = useState(
     localStorage.getItem("theme") || "lightMykonos"
   );
@@ -166,7 +168,11 @@ export default function Navbar() {
               >
                 <div className="indicator">
                   <ShoppingCart />
-                  <span className="badge badge-sm indicator-item">8</span>
+                  {itemCount > 0 && (
+                    <span className="badge badge-sm indicator-item badge-primary">
+                      {itemCount}
+                    </span>
+                  )}
                 </div>
               </div>
               <div
