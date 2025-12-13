@@ -1,6 +1,9 @@
 import { motion, AnimatePresence } from "motion/react";
 import { useState, useEffect, useRef } from "react";
-import { fetchProducts, fetchProductsByGroupName } from "../services/productService";
+import {
+  fetchProducts,
+  fetchProductsByGroupName,
+} from "../services/productService";
 import CategoryFilter from "../components/CategoryFilter";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
@@ -12,13 +15,13 @@ export default function StorePage() {
   const [location, setLocation] = useLocation();
   const { addToCart } = useCart();
   const { isAuthenticated } = useAuth();
-  
+
   const [selectedCard, setSelectedCard] = useState(null);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
-  
+
   // Variant selection modal state
   const [showVariantModal, setShowVariantModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -32,8 +35,9 @@ export default function StorePage() {
   // Helper function to build image URL
   const getImageUrl = (imagePath) => {
     if (!imagePath) return "https://via.placeholder.com/400x600";
-    if (imagePath.startsWith('http')) return imagePath;
-    const imageBaseUrl = import.meta.env.VITE_IMAGE_URL || 'http://localhost:8080';
+    if (imagePath.startsWith("http")) return imagePath;
+    const imageBaseUrl =
+      import.meta.env.VITE_IMAGE_URL || "http://localhost:8080";
     return `${imageBaseUrl}${imagePath}`;
   };
 
@@ -42,13 +46,13 @@ export default function StorePage() {
       try {
         setLoading(true);
         let data;
-        
+
         if (selectedCategory) {
           data = await fetchProductsByGroupName(selectedCategory.group_name);
         } else {
           data = await fetchProducts();
         }
-        
+
         setProducts(data);
         setError(null);
       } catch (err) {
@@ -66,41 +70,53 @@ export default function StorePage() {
   const getUniqueColors = (variantes) => {
     if (!variantes || variantes.length === 0) return [];
     const colorMap = new Map();
-    variantes.forEach(v => {
+    variantes.forEach((v) => {
       if (v.color && !colorMap.has(v.color)) {
-        colorMap.set(v.color, v.color_hex || '#cccccc');
+        colorMap.set(v.color, v.color_hex || "#cccccc");
       }
     });
-    return Array.from(colorMap.entries()).map(([color, hex]) => ({ color, hex }));
+    return Array.from(colorMap.entries()).map(([color, hex]) => ({
+      color,
+      hex,
+    }));
   };
 
   const getUniqueSizes = (variantes) => {
     if (!variantes || variantes.length === 0) return [];
-    const sizes = variantes.map(v => v.talle).filter(Boolean);
+    const sizes = variantes.map((v) => v.talle).filter(Boolean);
     return [...new Set(sizes)];
   };
 
   const handleAddToCartClick = (product, e) => {
     if (e) e.stopPropagation();
-    
+
     if (!isAuthenticated) {
       toast.error("Debes iniciar sesión para agregar productos al carrito");
       setLocation("/login");
       return;
     }
 
-    // If product has variants, show modal to select color/size
-    if (product.variantes && product.variantes.length > 0) {
+    if (!product.precio_web && !product.sale_price) {
+      toast.error("Este producto no tiene precio configurado");
+      console.error("Product without price:", product);
+      return;
+    }
+
+    if (!product.variantes || product.variantes.length === 0) {
+      toast.error("Este producto no tiene variantes disponibles");
+      console.error("Product without variants:", product);
+      return;
+    }
+
+    if (product.variantes.length === 1) {
+      addToCartDirectly(product.id, 1, product.variantes[0].variant_id);
+    } else {
       setSelectedProduct(product);
       setSelectedColor(null);
       setSelectedSize(null);
       setQuantity(1);
       setShowVariantModal(true);
-      // Open DaisyUI modal
       setTimeout(() => modalRef.current?.showModal(), 100);
-    } else {
-      // No variants, add directly
-      addToCartDirectly(product.id, 1);
     }
   };
 
@@ -108,7 +124,7 @@ export default function StorePage() {
     try {
       setAddingToCart(true);
       const result = await addToCart(productId, qty, variantId);
-      
+
       if (result.success) {
         toast.success("¡Producto agregado al carrito!");
       } else {
@@ -121,17 +137,12 @@ export default function StorePage() {
       setAddingToCart(false);
     }
   };
-  if (selectedProduct) {
-    console.log(
-      selectedProduct.id, quantity, selectedProduct.variantes[0].variant_id
-    )
-  }
   const handleConfirmAddToCart = async () => {
     if (!selectedProduct) return;
 
     // Validate variant selection
-    const uniqueColors = getUniqueColors(selectedProduct.variantes.color);
-    const uniqueSizes = getUniqueSizes(selectedProduct.variantes.talle);
+    const uniqueColors = getUniqueColors(selectedProduct.variantes);
+    const uniqueSizes = getUniqueSizes(selectedProduct.variantes);
 
     if (uniqueColors.length > 0 && !selectedColor) {
       toast.error("Por favor selecciona un color");
@@ -143,36 +154,41 @@ export default function StorePage() {
       return;
     }
 
-    // Find the specific variant logic
+    // Find the specific variant ID
     let variantId = null;
 
-    if (selectedProduct.variantes.length === 1) {
-      variantId = selectedProduct.variantes[0].variant_id.toString();
-    }
-
-    if (selectedProduct.variantes.length !== 0) {
-      console.log(selectedProduct.id, quantity, variantId);
-    }
-    
     // If we have variants, we must find the matching one
     if (selectedProduct.variantes && selectedProduct.variantes.length > 0) {
-      const selectedVariant = selectedProduct.variantes.find(v => 
-        (!selectedColor || v.color === selectedColor) && 
-        (!selectedSize || v.talle === selectedSize)
-      );
+      // If only one variant, use it directly
+      if (selectedProduct.variantes.length === 1) {
+        variantId = selectedProduct.variantes[0].variant_id;
+      } else {
+        // Find the variant that matches the selected color and size
+        const selectedVariant = selectedProduct.variantes.find(
+          (v) =>
+            (uniqueColors.length === 0 || v.color === selectedColor) &&
+            (uniqueSizes.length === 0 || v.talle === selectedSize)
+        );
 
-      if (!selectedVariant) {
-        toast.error("Esta combinación de color y talle no está disponible");
-        return;
+        if (!selectedVariant) {
+          toast.error("Esta combinación de color y talle no está disponible");
+          return;
+        }
+        variantId = selectedVariant.variant_id;
       }
-      variantId = selectedVariant.variant_id.toString();
     }
-    
+
+    console.log("Adding to cart:", {
+      productId: selectedProduct.id,
+      quantity: quantity,
+      variantId: variantId,
+    });
+
     // Add to cart
     try {
       setAddingToCart(true);
       const result = await addToCart(selectedProduct.id, quantity, variantId);
-      
+
       if (result.success) {
         toast.success(`¡${selectedProduct.nombre_web} agregado al carrito!`);
         closeVariantModal();
@@ -199,7 +215,7 @@ export default function StorePage() {
   return (
     <div>
       <div className="bg-base-100 min-h-screen py-12">
-      {/* Header */}
+        {/* Header */}
         <div className="max-w-7xl mx-auto mb-16 px-4">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -214,43 +230,56 @@ export default function StorePage() {
           </motion.div>
         </div>
 
-      {/* Main Content - Full Width with Filters Flush Left */}
-      <div className="flex md:flex-row flex-col gap-24 pl-2 pr-2">
-        {/* Left Sidebar - Filters (Flush Left) */}
-        <div className="w-48 flex-shrink-0">
-          <div className="md:sticky top-24">
-            <CategoryFilter
-              onSelectCategory={setSelectedCategory}
-              selectedCategory={selectedCategory}
-            />
-            
-            {selectedCategory && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-4 p-4 bg-base-200 rounded-lg"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-semibold">Filtrando por:</span>
-                  <button
-                    onClick={() => setSelectedCategory(null)}
-                    className="btn btn-ghost btn-xs btn-circle"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-                <span className="badge badge-primary badge-sm">
-                  {selectedCategory.group_name}
-                </span>
-              </motion.div>
-            )}
-          </div>
-        </div>
+        {/* Main Content - Full Width with Filters Flush Left */}
+        <div className="flex md:flex-row flex-col gap-24 pl-2 pr-2">
+          {/* Left Sidebar - Filters (Flush Left) */}
+          <div className="w-48 flex-shrink-0">
+            <div className="md:sticky top-24">
+              <CategoryFilter
+                onSelectCategory={setSelectedCategory}
+                selectedCategory={selectedCategory}
+              />
 
-        {/* Right Content - Products */}
-        <div className="flex-1 ">
+              {selectedCategory && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-4 p-4 bg-base-200 rounded-lg"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-semibold">
+                      Filtrando por:
+                    </span>
+                    <button
+                      onClick={() => setSelectedCategory(null)}
+                      className="btn btn-ghost btn-xs btn-circle"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                  <span className="badge badge-primary badge-sm">
+                    {selectedCategory.group_name}
+                  </span>
+                </motion.div>
+              )}
+            </div>
+          </div>
+
+          {/* Right Content - Products */}
+          <div className="flex-1 ">
             {/* Loading State */}
             {loading && (
               <div className="flex justify-center items-center min-h-[400px]">
@@ -261,8 +290,18 @@ export default function StorePage() {
             {/* Error State */}
             {error && (
               <div className="alert alert-error">
-                <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="stroke-current shrink-0 h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
                 <span>{error}</span>
               </div>
@@ -283,7 +322,11 @@ export default function StorePage() {
                 {products.map((product, index) => {
                   const uniqueColors = getUniqueColors(product.variantes);
                   const uniqueSizes = getUniqueSizes(product.variantes);
-                  
+                  const hasValidPrice =
+                    product.precio_web || product.sale_price;
+                  const isAvailable =
+                    product.stock_disponible > 0 && hasValidPrice;
+
                   return (
                     <motion.div
                       key={product.id}
@@ -302,7 +345,16 @@ export default function StorePage() {
                         />
                         {product.stock_disponible === 0 && (
                           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                            <span className="text-white text-xl font-light tracking-wide">SIN STOCK</span>
+                            <span className="text-white text-xl font-light tracking-wide">
+                              SIN STOCK
+                            </span>
+                          </div>
+                        )}
+                        {!hasValidPrice && (
+                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                            <span className="text-white text-xl font-light tracking-wide">
+                              PRECIO NO DISPONIBLE
+                            </span>
                           </div>
                         )}
                       </figure>
@@ -311,17 +363,27 @@ export default function StorePage() {
                           {product.nombre_web}
                         </h2>
                         <p className="text-primary font-light text-lg mb-2">
-                          ${(product.precio_web || product.sale_price || 0).toFixed(2)}
+                          $
+                          {(
+                            product.precio_web ||
+                            product.sale_price ||
+                            0
+                          ).toFixed(2)}
                         </p>
-                        
+
                         {/* Colors */}
                         {uniqueColors.length > 0 && (
                           <div className="mb-3">
-                            <p className="text-xs text-base-content/60 mb-2 font-light tracking-wide">COLORES</p>
+                            <p className="text-xs text-base-content/60 mb-2 font-light tracking-wide">
+                              COLORES
+                            </p>
                             <div className="flex gap-2 flex-wrap">
                               {uniqueColors.map(({ color, hex }) => (
-                                <div key={color} className="flex items-center gap-1 badge badge-outline badge-sm">
-                                  <div 
+                                <div
+                                  key={color}
+                                  className="flex items-center gap-1 badge badge-outline badge-sm"
+                                >
+                                  <div
                                     className="w-3 h-3 rounded-full border border-base-content/20"
                                     style={{ backgroundColor: hex }}
                                   />
@@ -335,9 +397,11 @@ export default function StorePage() {
                         {/* Sizes */}
                         {uniqueSizes.length > 0 && (
                           <div className="mb-3">
-                            <p className="text-xs text-base-content/60 mb-2 font-light tracking-wide">TALLES</p>
+                            <p className="text-xs text-base-content/60 mb-2 font-light tracking-wide">
+                              TALLES
+                            </p>
                             <div className="flex gap-2 flex-wrap">
-                              {uniqueSizes.map(size => (
+                              {uniqueSizes.map((size) => (
                                 <span
                                   key={size}
                                   className="badge badge-outline badge-sm font-light"
@@ -350,7 +414,7 @@ export default function StorePage() {
                         )}
 
                         <div className="card-actions justify-between mt-4">
-                          <button 
+                          <button
                             onClick={(e) => {
                               e.stopPropagation();
                               setSelectedCard(product);
@@ -359,10 +423,17 @@ export default function StorePage() {
                           >
                             VER DETALLES
                           </button>
-                          <button 
+                          <button
                             onClick={(e) => handleAddToCartClick(product, e)}
                             className="btn btn-primary btn-sm font-light tracking-wide gap-2"
-                            disabled={product.stock_disponible === 0}
+                            disabled={!isAvailable}
+                            title={
+                              !hasValidPrice
+                                ? "Precio no disponible"
+                                : product.stock_disponible === 0
+                                ? "Sin stock"
+                                : "Agregar al carrito"
+                            }
                           >
                             <ShoppingCart size={16} />
                             AGREGAR
@@ -377,14 +448,21 @@ export default function StorePage() {
           </div>
         </div>
       </div>
-    
-    <dialog ref={modalRef} className="modal">
+
+      <dialog ref={modalRef} className="modal">
         <div className="modal-box">
           {selectedProduct && (
             <>
-              <h3 className="font-bold text-lg">{selectedProduct.nombre_web}</h3>
+              <h3 className="font-bold text-lg">
+                {selectedProduct.nombre_web}
+              </h3>
               <p className="text-primary text-xl font-bold my-4">
-                ${(selectedProduct.precio_web || selectedProduct.sale_price || 0).toFixed(2)}
+                $
+                {(
+                  selectedProduct.precio_web ||
+                  selectedProduct.sale_price ||
+                  0
+                ).toFixed(2)}
               </p>
 
               {/* Color Selection */}
@@ -394,21 +472,25 @@ export default function StorePage() {
                     <span className="label-text font-semibold">Color *</span>
                   </label>
                   <div className="flex gap-2 flex-wrap">
-                    {getUniqueColors(selectedProduct.variantes).map(({ color, hex }) => (
-                      <button
-                        key={color}
-                        onClick={() => setSelectedColor(color)}
-                        className={`btn btn-sm gap-2 ${
-                          selectedColor === color ? 'btn-primary' : 'btn-outline'
-                        }`}
-                      >
-                        <div 
-                          className="w-4 h-4 rounded-full border-2 border-base-content/30"
-                          style={{ backgroundColor: hex }}
-                        />
-                        {color}
-                      </button>
-                    ))}
+                    {getUniqueColors(selectedProduct.variantes).map(
+                      ({ color, hex }) => (
+                        <button
+                          key={color}
+                          onClick={() => setSelectedColor(color)}
+                          className={`btn btn-sm gap-2 ${
+                            selectedColor === color
+                              ? "btn-primary"
+                              : "btn-outline"
+                          }`}
+                        >
+                          <div
+                            className="w-4 h-4 rounded-full border-2 border-base-content/30"
+                            style={{ backgroundColor: hex }}
+                          />
+                          {color}
+                        </button>
+                      )
+                    )}
                   </div>
                 </div>
               )}
@@ -420,12 +502,12 @@ export default function StorePage() {
                     <span className="label-text font-semibold">Talle *</span>
                   </label>
                   <div className="flex gap-2 flex-wrap">
-                    {getUniqueSizes(selectedProduct.variantes).map(size => (
+                    {getUniqueSizes(selectedProduct.variantes).map((size) => (
                       <button
                         key={size}
                         onClick={() => setSelectedSize(size)}
                         className={`btn btn-sm ${
-                          selectedSize === size ? 'btn-primary' : 'btn-outline'
+                          selectedSize === size ? "btn-primary" : "btn-outline"
                         }`}
                       >
                         {size}
@@ -447,7 +529,9 @@ export default function StorePage() {
                   >
                     -
                   </button>
-                  <span className="text-xl font-bold w-12 text-center">{quantity}</span>
+                  <span className="text-xl font-bold w-12 text-center">
+                    {quantity}
+                  </span>
                   <button
                     onClick={() => setQuantity(quantity + 1)}
                     className="btn btn-circle btn-sm"
@@ -485,7 +569,7 @@ export default function StorePage() {
         <form method="dialog" className="modal-backdrop">
           <button onClick={closeVariantModal}>close</button>
         </form>
-    </dialog>
+      </dialog>
 
       {/* Expanded Product Card Modal */}
       <AnimatePresence>
@@ -534,7 +618,12 @@ export default function StorePage() {
                     {selectedCard.nombre_web}
                   </h2>
                   <p className="text-2xl text-primary font-light mb-6">
-                    ${(selectedCard.precio_web || selectedCard.sale_price || 0).toFixed(2)}
+                    $
+                    {(
+                      selectedCard.precio_web ||
+                      selectedCard.sale_price ||
+                      0
+                    ).toFixed(2)}
                   </p>
                   <div className="w-12 h-px bg-primary/30 mb-6"></div>
                   <p className="text-lg text-base-content/80 leading-relaxed mb-8">
@@ -542,33 +631,42 @@ export default function StorePage() {
                   </p>
 
                   {/* Variant Details */}
-                  {selectedCard.variantes && selectedCard.variantes.length > 0 && (
-                    <div className="mb-6">
-                      <h3 className="text-sm font-light tracking-wide text-base-content/60 mb-3">VARIANTES DISPONIBLES</h3>
-                      <div className="grid grid-cols-1 gap-2">
-                        {selectedCard.variantes.map(variant => (
-                          <div
-                            key={variant.variant_id}
-                            className="flex items-center justify-between p-3 bg-base-200 rounded-lg"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div
-                                className="w-8 h-8 rounded-full border-2 border-base-content/20"
-                                style={{ backgroundColor: variant.color_hex }}
-                              ></div>
-                              <div>
-                                <p className="font-light">{variant.color} - Talle {variant.talle}</p>
-                                <p className="text-xs text-base-content/60">Stock: {variant.stock} unidades</p>
+                  {selectedCard.variantes &&
+                    selectedCard.variantes.length > 0 && (
+                      <div className="mb-6">
+                        <h3 className="text-sm font-light tracking-wide text-base-content/60 mb-3">
+                          VARIANTES DISPONIBLES
+                        </h3>
+                        <div className="grid grid-cols-1 gap-2">
+                          {selectedCard.variantes.map((variant) => (
+                            <div
+                              key={variant.variant_id}
+                              className="flex items-center justify-between p-3 bg-base-200 rounded-lg"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className="w-8 h-8 rounded-full border-2 border-base-content/20"
+                                  style={{ backgroundColor: variant.color_hex }}
+                                ></div>
+                                <div>
+                                  <p className="font-light">
+                                    {variant.color} - Talle {variant.talle}
+                                  </p>
+                                  <p className="text-xs text-base-content/60">
+                                    Stock: {variant.stock} unidades
+                                  </p>
+                                </div>
                               </div>
+                              {variant.stock === 0 && (
+                                <span className="badge badge-error badge-sm">
+                                  Sin stock
+                                </span>
+                              )}
                             </div>
-                            {variant.stock === 0 && (
-                              <span className="badge badge-error badge-sm">Sin stock</span>
-                            )}
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
                   <div className="flex flex-col sm:flex-row gap-3 justify-between items-center mt-8 pt-6 border-t border-base-300">
                     <button
@@ -577,7 +675,7 @@ export default function StorePage() {
                     >
                       CERRAR
                     </button>
-                    <button 
+                    <button
                       className="btn btn-primary btn-lg font-light tracking-wide px-8 gap-2 w-full sm:w-auto"
                       disabled={selectedCard.stock_disponible === 0}
                       onClick={(e) => {
@@ -594,8 +692,8 @@ export default function StorePage() {
               </motion.div>
             </motion.div>
           </>
-        )}  
+        )}
       </AnimatePresence>
     </div>
-  ) 
+  );
 }
