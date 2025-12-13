@@ -16,40 +16,41 @@ import MyPurchases from "./assets/principalComponents/MyPurchases.jsx";
 import EmailVerification from "./assets/supportComponents/EmailVerification.jsx";
 import OrderTracking from "./assets/principalComponents/OrderTracking.jsx";
 import ProtectedRoute from "./assets/components/ProtectedRoute.jsx";
-import AdminDashboard from "./assets/principalComponents/AdminDashboard.jsx";
-import AdminProductList from "./assets/principalComponents/AdminProductList.jsx";
-import AdminOrders from "./assets/principalComponents/AdminOrders.jsx";
-import AdminUsers from "./assets/principalComponents/AdminUsers.jsx";
-import AdminDiscounts from "./assets/principalComponents/AdminDiscounts.jsx";
+import AdminDashboard from "./assets/AdminComponents/AdminDashboard.jsx";
+import AdminProductList from "./assets/AdminComponents/AdminProductList.jsx";
+import AdminOrders from "./assets/AdminComponents/AdminOrders.jsx";
+import AdminUsers from "./assets/AdminComponents/AdminUsers.jsx";
+import AdminDiscounts from "./assets/AdminComponents/AdminDiscounts.jsx";
 import { Toaster } from "react-hot-toast";
 import CheckOut from "./assets/principalComponents/CheckOut.jsx";
 
 function App() {
   const [location] = useLocation();
-  const hideNavbar = location === "/email-verification" || location.startsWith("/admin");
+  const hideNavbar =
+    location === "/email-verification" || location.startsWith("/admin");
 
   return (
     <>
-      <Toaster 
+      <Toaster
         position="top-center"
         toastOptions={{
           duration: 3000,
           style: {
-            background: '#363636',
-            color: '#fff',
+            background: "#363636",
+            color: "#fff",
           },
           success: {
             duration: 2000,
             iconTheme: {
-              primary: '#10b981',
-              secondary: '#fff',
+              primary: "#10b981",
+              secondary: "#fff",
             },
           },
           error: {
             duration: 4000,
             iconTheme: {
-              primary: '#ef4444',
-              secondary: '#fff',
+              primary: "#ef4444",
+              secondary: "#fff",
             },
           },
         }}
@@ -67,7 +68,7 @@ function App() {
         <Route path="/email-verification" component={EmailVerification} />
         <Route path="/order-tracking/:orderId" component={OrderTracking} />
         <Route path="/checkout" component={CheckOut} />
-        
+
         {/* Admin Routes */}
         <Route path="/admin">
           {() => <ProtectedRoute component={AdminDashboard} />}

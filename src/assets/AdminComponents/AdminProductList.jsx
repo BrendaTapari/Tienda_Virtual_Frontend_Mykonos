@@ -1,10 +1,10 @@
-import AdminLayout from "./AdminLayout";
+import AdminLayout from "../AdminComponents/AdminLayout";
 import { useState, useEffect } from "react";
-import { 
-  fetchProducts, 
-  fetchAllProducts, 
+import {
+  fetchProducts,
+  fetchAllProducts,
   toggleProductOnline,
-  deleteProduct 
+  deleteProduct,
 } from "../services/productService";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -56,7 +56,7 @@ export default function AdminProductList() {
       setSearchLoading(true);
       setError(null);
       const products = await fetchAllProducts(searchBarcode);
-      
+
       if (products.length === 0) {
         setError("No product found with that barcode");
         setAllProducts([]);
@@ -107,7 +107,7 @@ export default function AdminProductList() {
 
       // Reload products
       await loadOnlineProducts();
-      
+
       // Reset form
       setShowAddModal(false);
       setSelectedProduct(null);
@@ -130,7 +130,11 @@ export default function AdminProductList() {
 
   // Remove product from online store
   const handleRemoveFromOnlineStore = async (productId) => {
-    if (!confirm("Are you sure you want to remove this product from the online store?")) {
+    if (
+      !confirm(
+        "Are you sure you want to remove this product from the online store?"
+      )
+    ) {
       return;
     }
 
@@ -154,28 +158,49 @@ export default function AdminProductList() {
   return (
     <AdminLayout>
       <div>
-        <h1 className="text-4xl font-bold mb-2 tracking-wide">Product Management</h1>
-        <p className="text-base-content/60 mb-8">Manage products in the online store</p>
+        <h1 className="text-4xl font-bold mb-2 tracking-wide">
+          Product Management
+        </h1>
+        <p className="text-base-content/60 mb-8">
+          Manage products in the online store
+        </p>
 
         {/* Error Alert */}
         {error && (
           <div className="alert alert-error mb-6">
-            <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="stroke-current shrink-0 h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
             <span>{error}</span>
-            <button onClick={() => setError(null)} className="btn btn-sm btn-ghost">✕</button>
+            <button
+              onClick={() => setError(null)}
+              className="btn btn-sm btn-ghost"
+            >
+              ✕
+            </button>
           </div>
         )}
 
         {/* Add Product Section */}
         <div className="card bg-base-100 shadow-lg mb-8">
           <div className="card-body">
-            <h2 className="card-title text-primary">Add Product to Online Store</h2>
+            <h2 className="card-title text-primary">
+              Add Product to Online Store
+            </h2>
             <p className="text-sm text-base-content/60 mb-4">
               Search for a product by barcode to add it to the online store
             </p>
-            
+
             <div className="flex gap-4">
               <input
                 type="text"
@@ -185,7 +210,7 @@ export default function AdminProductList() {
                 onChange={(e) => setSearchBarcode(e.target.value)}
                 onKeyPress={(e) => e.key === "Enter" && handleBarcodeSearch()}
               />
-              <button 
+              <button
                 className="btn btn-primary"
                 onClick={handleBarcodeSearch}
                 disabled={searchLoading}
@@ -203,15 +228,19 @@ export default function AdminProductList() {
         {/* Online Products List */}
         <div className="card bg-base-100 shadow-lg">
           <div className="card-body">
-            <h2 className="card-title text-primary mb-4">Products in Online Store</h2>
-            
+            <h2 className="card-title text-primary mb-4">
+              Products in Online Store
+            </h2>
+
             {loading ? (
               <div className="flex justify-center items-center h-64">
                 <span className="loading loading-spinner loading-lg text-primary"></span>
               </div>
             ) : onlineProducts.length === 0 ? (
               <div className="text-center py-16">
-                <p className="text-base-content/60">No products in online store yet</p>
+                <p className="text-base-content/60">
+                  No products in online store yet
+                </p>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -231,18 +260,35 @@ export default function AdminProductList() {
                       <tr key={product.id}>
                         <td>{product.id}</td>
                         <td className="font-medium">{product.nombre_web}</td>
-                        <td>${(product.precio_web || product.sale_price || 0).toFixed(2)}</td>
                         <td>
-                          <span className={`badge ${product.stock_disponible > 0 ? 'badge-success' : 'badge-error'}`}>
+                          $
+                          {(
+                            product.precio_web ||
+                            product.sale_price ||
+                            0
+                          ).toFixed(2)}
+                        </td>
+                        <td>
+                          <span
+                            className={`badge ${
+                              product.stock_disponible > 0
+                                ? "badge-success"
+                                : "badge-error"
+                            }`}
+                          >
                             {product.stock_disponible} units
                           </span>
                         </td>
-                        <td className="text-sm text-base-content/60">{product.slug}</td>
+                        <td className="text-sm text-base-content/60">
+                          {product.slug}
+                        </td>
                         <td>
                           <div className="flex gap-2">
-                            <button 
+                            <button
                               className="btn btn-sm btn-error btn-outline"
-                              onClick={() => handleRemoveFromOnlineStore(product.id)}
+                              onClick={() =>
+                                handleRemoveFromOnlineStore(product.id)
+                              }
                             >
                               Remove
                             </button>
@@ -268,7 +314,7 @@ export default function AdminProductList() {
                 onClick={() => setShowAddModal(false)}
                 className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
               />
-              
+
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -277,8 +323,10 @@ export default function AdminProductList() {
               >
                 <div className="card bg-base-100 w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
                   <div className="card-body">
-                    <h2 className="card-title text-2xl mb-4">Add Product to Online Store</h2>
-                    
+                    <h2 className="card-title text-2xl mb-4">
+                      Add Product to Online Store
+                    </h2>
+
                     {/* Search Results */}
                     {allProducts.length > 0 && !selectedProduct && (
                       <div className="mb-6">
@@ -293,15 +341,28 @@ export default function AdminProductList() {
                               <div className="card-body p-4">
                                 <div className="flex justify-between items-center">
                                   <div>
-                                    <p className="font-bold">{product.product_name}</p>
-                                    <p className="text-sm text-base-content/60">
-                                      Barcode: {product.provider_code} | Price: ${product.sale_price}
+                                    <p className="font-bold">
+                                      {product.product_name}
                                     </p>
-                                    <span className={`badge badge-sm ${product.en_tienda_online ? 'badge-success' : 'badge-ghost'}`}>
-                                      {product.en_tienda_online ? 'Already Online' : 'Not Online'}
+                                    <p className="text-sm text-base-content/60">
+                                      Barcode: {product.provider_code} | Price:
+                                      ${product.sale_price}
+                                    </p>
+                                    <span
+                                      className={`badge badge-sm ${
+                                        product.en_tienda_online
+                                          ? "badge-success"
+                                          : "badge-ghost"
+                                      }`}
+                                    >
+                                      {product.en_tienda_online
+                                        ? "Already Online"
+                                        : "Not Online"}
                                     </span>
                                   </div>
-                                  <button className="btn btn-sm btn-primary">Select</button>
+                                  <button className="btn btn-sm btn-primary">
+                                    Select
+                                  </button>
                                 </div>
                               </div>
                             </div>
@@ -314,59 +375,94 @@ export default function AdminProductList() {
                     {selectedProduct && (
                       <div className="space-y-4">
                         <div className="alert alert-info">
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="stroke-current shrink-0 w-6 h-6">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            className="stroke-current shrink-0 w-6 h-6"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            ></path>
                           </svg>
                           <span>Selected: {selectedProduct.product_name}</span>
                         </div>
 
                         <div className="form-control">
                           <label className="label">
-                            <span className="label-text">Product Name (for web) *</span>
+                            <span className="label-text">
+                              Product Name (for web) *
+                            </span>
                           </label>
                           <input
                             type="text"
                             className="input input-bordered"
                             value={formData.nombre_web}
-                            onChange={(e) => setFormData({ ...formData, nombre_web: e.target.value })}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                nombre_web: e.target.value,
+                              })
+                            }
                             required
                           />
                         </div>
 
                         <div className="form-control">
                           <label className="label">
-                            <span className="label-text">Description (for web)</span>
+                            <span className="label-text">
+                              Description (for web)
+                            </span>
                           </label>
                           <textarea
                             className="textarea textarea-bordered h-24"
                             value={formData.descripcion_web}
-                            onChange={(e) => setFormData({ ...formData, descripcion_web: e.target.value })}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                descripcion_web: e.target.value,
+                              })
+                            }
                           />
                         </div>
 
                         <div className="form-control">
                           <label className="label">
-                            <span className="label-text">Price (for web) *</span>
+                            <span className="label-text">
+                              Price (for web) *
+                            </span>
                           </label>
                           <input
                             type="number"
                             step="0.01"
                             className="input input-bordered"
                             value={formData.precio_web}
-                            onChange={(e) => setFormData({ ...formData, precio_web: e.target.value })}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                precio_web: e.target.value,
+                              })
+                            }
                             required
                           />
                         </div>
 
                         <div className="form-control">
                           <label className="label">
-                            <span className="label-text">Slug (optional, auto-generated if empty)</span>
+                            <span className="label-text">
+                              Slug (optional, auto-generated if empty)
+                            </span>
                           </label>
                           <input
                             type="text"
                             className="input input-bordered"
                             value={formData.slug}
-                            onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                            onChange={(e) =>
+                              setFormData({ ...formData, slug: e.target.value })
+                            }
                             placeholder="product-name-slug"
                           />
                         </div>
@@ -374,7 +470,7 @@ export default function AdminProductList() {
                     )}
 
                     <div className="card-actions justify-end mt-6">
-                      <button 
+                      <button
                         className="btn btn-ghost"
                         onClick={() => {
                           setShowAddModal(false);
@@ -385,7 +481,7 @@ export default function AdminProductList() {
                         Cancel
                       </button>
                       {selectedProduct && (
-                        <button 
+                        <button
                           className="btn btn-primary"
                           onClick={handleAddToOnlineStore}
                         >

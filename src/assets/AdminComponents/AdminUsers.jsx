@@ -1,6 +1,10 @@
 import AdminLayout from "./AdminLayout";
 import { useState, useEffect } from "react";
-import { getAllUsers, changeUserRole, changeUserStatus } from "../services/adminService";
+import {
+  getAllUsers,
+  changeUserRole,
+  changeUserStatus,
+} from "../services/adminService";
 import { User, Shield, CheckCircle, XCircle } from "lucide-react";
 
 export default function AdminUsers() {
@@ -30,9 +34,13 @@ export default function AdminUsers() {
 
   const handleChangeRole = async (userId, currentRole) => {
     const newRole = currentRole === "admin" ? "customer" : "admin";
-    
+
     if (currentRole === "admin") {
-      if (!confirm("¿Estás seguro de quitar privilegios de administrador a este usuario?")) {
+      if (
+        !confirm(
+          "¿Estás seguro de quitar privilegios de administrador a este usuario?"
+        )
+      ) {
         return;
       }
     }
@@ -48,7 +56,7 @@ export default function AdminUsers() {
 
   const handleChangeStatus = async (userId, currentStatus) => {
     const newStatus = currentStatus === "active" ? "inactive" : "active";
-    
+
     try {
       await changeUserStatus(userId, newStatus);
       await loadUsers();
@@ -61,14 +69,23 @@ export default function AdminUsers() {
   return (
     <AdminLayout>
       <div>
-        <h1 className="text-4xl font-bold mb-2 tracking-wide">Gestión de Usuarios</h1>
-        <p className="text-base-content/60 mb-8">Administrar usuarios del sistema</p>
+        <h1 className="text-4xl font-bold mb-2 tracking-wide">
+          Gestión de Usuarios
+        </h1>
+        <p className="text-base-content/60 mb-8">
+          Administrar usuarios del sistema
+        </p>
 
         {/* Error Alert */}
         {error && (
           <div className="alert alert-error mb-6">
             <span>{error}</span>
-            <button onClick={() => setError(null)} className="btn btn-sm btn-ghost">✕</button>
+            <button
+              onClick={() => setError(null)}
+              className="btn btn-sm btn-ghost"
+            >
+              ✕
+            </button>
           </div>
         )}
 
@@ -76,19 +93,25 @@ export default function AdminUsers() {
         <div className="flex gap-2 mb-6">
           <button
             onClick={() => setFilter("all")}
-            className={`btn btn-sm ${filter === "all" ? "btn-primary" : "btn-ghost"}`}
+            className={`btn btn-sm ${
+              filter === "all" ? "btn-primary" : "btn-ghost"
+            }`}
           >
             Todos ({users.length})
           </button>
           <button
             onClick={() => setFilter("customer")}
-            className={`btn btn-sm ${filter === "customer" ? "btn-info" : "btn-ghost"}`}
+            className={`btn btn-sm ${
+              filter === "customer" ? "btn-info" : "btn-ghost"
+            }`}
           >
             Clientes
           </button>
           <button
             onClick={() => setFilter("admin")}
-            className={`btn btn-sm ${filter === "admin" ? "btn-warning" : "btn-ghost"}`}
+            className={`btn btn-sm ${
+              filter === "admin" ? "btn-warning" : "btn-ghost"
+            }`}
           >
             Administradores
           </button>
@@ -103,7 +126,9 @@ export default function AdminUsers() {
               </div>
             ) : users.length === 0 ? (
               <div className="text-center py-16">
-                <p className="text-base-content/60">No se encontraron usuarios</p>
+                <p className="text-base-content/60">
+                  No se encontraron usuarios
+                </p>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -132,18 +157,32 @@ export default function AdminUsers() {
                             )}
                             <div>
                               <p className="font-medium">{user.username}</p>
-                              <p className="text-sm text-base-content/60">{user.fullname}</p>
+                              <p className="text-sm text-base-content/60">
+                                {user.fullname}
+                              </p>
                             </div>
                           </div>
                         </td>
                         <td className="text-sm">{user.email}</td>
                         <td>
-                          <span className={`badge ${user.role === "admin" ? "badge-warning" : "badge-info"}`}>
+                          <span
+                            className={`badge ${
+                              user.role === "admin"
+                                ? "badge-warning"
+                                : "badge-info"
+                            }`}
+                          >
                             {user.role === "admin" ? "Admin" : "Cliente"}
                           </span>
                         </td>
                         <td>
-                          <span className={`badge ${user.status === "active" ? "badge-success" : "badge-error"}`}>
+                          <span
+                            className={`badge ${
+                              user.status === "active"
+                                ? "badge-success"
+                                : "badge-error"
+                            }`}
+                          >
                             {user.status === "active" ? "Activo" : "Inactivo"}
                           </span>
                         </td>
@@ -154,24 +193,50 @@ export default function AdminUsers() {
                             <XCircle size={20} className="text-error" />
                           )}
                         </td>
-                        <td className="text-center">{user.total_purchases || 0}</td>
+                        <td className="text-center">
+                          {user.total_purchases || 0}
+                        </td>
                         <td className="text-sm">
-                          {user.created_at ? new Date(user.created_at).toLocaleDateString('es-AR') : 'N/A'}
+                          {user.created_at
+                            ? new Date(user.created_at).toLocaleDateString(
+                                "es-AR"
+                              )
+                            : "N/A"}
                         </td>
                         <td>
                           <div className="flex gap-2">
                             <button
-                              onClick={() => handleChangeRole(user.id, user.role)}
-                              className={`btn btn-xs ${user.role === "admin" ? "btn-warning" : "btn-info"}`}
-                              title={user.role === "admin" ? "Quitar admin" : "Hacer admin"}
+                              onClick={() =>
+                                handleChangeRole(user.id, user.role)
+                              }
+                              className={`btn btn-xs ${
+                                user.role === "admin"
+                                  ? "btn-warning"
+                                  : "btn-info"
+                              }`}
+                              title={
+                                user.role === "admin"
+                                  ? "Quitar admin"
+                                  : "Hacer admin"
+                              }
                             >
-                              {user.role === "admin" ? "Quitar Admin" : "Hacer Admin"}
+                              {user.role === "admin"
+                                ? "Quitar Admin"
+                                : "Hacer Admin"}
                             </button>
                             <button
-                              onClick={() => handleChangeStatus(user.id, user.status)}
-                              className={`btn btn-xs ${user.status === "active" ? "btn-error" : "btn-success"}`}
+                              onClick={() =>
+                                handleChangeStatus(user.id, user.status)
+                              }
+                              className={`btn btn-xs ${
+                                user.status === "active"
+                                  ? "btn-error"
+                                  : "btn-success"
+                              }`}
                             >
-                              {user.status === "active" ? "Desactivar" : "Activar"}
+                              {user.status === "active"
+                                ? "Desactivar"
+                                : "Activar"}
                             </button>
                           </div>
                         </td>
