@@ -1,25 +1,36 @@
 import { motion, AnimatePresence } from "motion/react";
 import { useState, useEffect } from "react";
 import { fetchGroupsHierarchy } from "../services/groupService";
+import { getAllBranches } from "../services/branchService";
 import PropTypes from "prop-types";
 import { div } from "motion/react-client";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, MapPin } from "lucide-react";
 
 /**
  * CategoryFilter Component
  * Displays a hierarchical tree of product categories with expand/collapse functionality
  */
-export default function CategoryFilter({ onSelectCategory, selectedCategory }) {
+export default function CategoryFilter({
+  onSelectCategory,
+  selectedCategory,
+  onSelectBranch,
+  selectedBranch,
+}) {
   const [categories, setCategories] = useState([]);
+  const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [expandedCategories, setExpandedCategories] = useState(new Set());
   const [seeCategory, setSeeCategory] = useState(true);
+  const [seeBranches, setSeeBranches] = useState(true);
 
   const handleSeeCategory = () => {
     setSeeCategory(!seeCategory);
   };
 
+  const handleSeeBranches = () => {
+    setSeeBranches(!seeBranches);
+  };
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -28,7 +39,7 @@ export default function CategoryFilter({ onSelectCategory, selectedCategory }) {
         const data = await fetchGroupsHierarchy();
         setCategories(data);
         // Auto-expand all root categories
-        const rootIds = new Set(data.map(cat => cat.id));
+        const rootIds = new Set(data.map((cat) => cat.id));
         setExpandedCategories(rootIds);
         setError(null);
       } catch (err) {
@@ -39,11 +50,21 @@ export default function CategoryFilter({ onSelectCategory, selectedCategory }) {
       }
     };
 
+    const loadBranches = async () => {
+      try {
+        const data = await getAllBranches();
+        setBranches(data);
+      } catch (err) {
+        console.error("Error loading branches:", err);
+      }
+    };
+
     loadCategories();
+    loadBranches();
   }, []);
 
   const toggleExpand = (categoryId) => {
-    setExpandedCategories(prev => {
+    setExpandedCategories((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(categoryId)) {
         newSet.delete(categoryId);
@@ -69,9 +90,10 @@ export default function CategoryFilter({ onSelectCategory, selectedCategory }) {
           className={`
             flex items-center gap-2 py-2 px-3 rounded-lg cursor-pointer
             transition-colors duration-200
-            ${isSelected 
-              ? 'bg-primary text-primary-content font-medium' 
-              : 'hover:bg-base-300 text-base-content'
+            ${
+              isSelected
+                ? "bg-primary text-primary-content font-medium"
+                : "hover:bg-base-300 text-base-content"
             }
           `}
           style={{ paddingLeft: `${level * 1.5 + 0.75}rem` }}
@@ -96,13 +118,18 @@ export default function CategoryFilter({ onSelectCategory, selectedCategory }) {
                 animate={{ rotate: isExpanded ? 90 : 0 }}
                 transition={{ duration: 0.2 }}
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
               </motion.svg>
             </button>
           )}
-          
+
           {!hasChildren && <div className="w-8" />}
-          
+
           <span className="flex-1 text-sm font-light tracking-wide">
             {category.group_name}
           </span>
@@ -117,7 +144,9 @@ export default function CategoryFilter({ onSelectCategory, selectedCategory }) {
               transition={{ duration: 0.2 }}
               className="overflow-hidden"
             >
-              {category.children.map(child => renderCategory(child, level + 1))}
+              {category.children.map((child) =>
+                renderCategory(child, level + 1)
+              )}
             </motion.div>
           )}
         </AnimatePresence>
@@ -127,56 +156,127 @@ export default function CategoryFilter({ onSelectCategory, selectedCategory }) {
 
   return (
     <div className="md:w-64 w-72 bg-base-200 rounded-lg p-4 shadow-lg h-fit sticky top-4">
-      {/* Header */}
+      {/* Branches Section */}
+      <div className="mb-6">
+        <div className="mb-4 flex justify-between items-center">
+          <h2 className="text-xl font-light tracking-widest text-base-content mb-2 flex items-center gap-2">
+            SUCURSALES
+          </h2>
+          <button
+            onClick={handleSeeBranches}
+            className="btn btn-xs btn-icon tooltip"
+            data-tip="Ver Sucursales"
+          >
+            {seeBranches ? (
+              <ChevronUp className="w-4 h-4" />
+            ) : (
+              <ChevronDown className="w-4 h-4" />
+            )}
+          </button>
+        </div>
+        <div className="w-12 h-px bg-primary mb-2"></div>
+
+        {seeBranches && (
+          <div className="space-y-1">
+            {/* All Branches Button */}
+            <motion.button
+              onClick={() => onSelectBranch(null)}
+              className={`
+                w-full py-2 px-3 rounded-lg mb-2 text-sm font-light tracking-wide
+                transition-colors duration-200 flex items-center gap-2
+                ${
+                  !selectedBranch
+                    ? "bg-primary text-primary-content font-medium"
+                    : "bg-base-300 hover:bg-base-300/70 text-base-content"
+                }
+              `}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              TODAS LAS SUCURSALES
+            </motion.button>
+
+            {/* Branch List */}
+            {branches.map((branch) => (
+              <motion.button
+                key={branch.id}
+                onClick={() => onSelectBranch(branch)}
+                className={`
+                  w-full py-2 px-3 rounded-lg text-sm font-light tracking-wide text-left
+                  transition-colors duration-200
+                  ${
+                    selectedBranch?.id === branch.id
+                      ? "bg-primary text-primary-content font-medium"
+                      : "bg-base-300 hover:bg-base-300/70 text-base-content"
+                  }
+                `}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                {branch.name}
+              </motion.button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Categories Section */}
       <div className="mb-4 flex justify-between items-center">
         <h2 className="text-xl font-light tracking-widest text-base-content mb-2">
           CATEGORÍAS
         </h2>
-        <button onClick={handleSeeCategory} className="btn btn-xs btn-icon tooltip" data-tip="Ver Categorias">{seeCategory ? (<ChevronUp className="w-4 h-4" />) : (<ChevronDown className="w-4 h-4" />)}</button>
+        <button
+          onClick={handleSeeCategory}
+          className="btn btn-xs btn-icon tooltip"
+          data-tip="Ver Categorias"
+        >
+          {seeCategory ? (
+            <ChevronUp className="w-4 h-4" />
+          ) : (
+            <ChevronDown className="w-4 h-4" />
+          )}
+        </button>
       </div>
-        <div className="w-12 h-px bg-primary mb-2"></div>
+      <div className="w-12 h-px bg-primary mb-2"></div>
 
       {/* All Products Button */}
       {seeCategory && (
         <div>
-
-      <motion.button
-        onClick={() => onSelectCategory(null)}
-        className={`
+          <motion.button
+            onClick={() => onSelectCategory(null)}
+            className={`
           w-full py-2 px-3 rounded-lg mb-3 text-sm font-light tracking-wide
           transition-colors duration-200
-          ${!selectedCategory 
-            ? 'bg-primary text-primary-content font-medium' 
-            : 'bg-base-300 hover:bg-base-300/70 text-base-content'
+          ${
+            !selectedCategory
+              ? "bg-primary text-primary-content font-medium"
+              : "bg-base-300 hover:bg-base-300/70 text-base-content"
           }
         `}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-      >
-        TODOS LOS PRODUCTOS
-      </motion.button>
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            TODOS LOS PRODUCTOS
+          </motion.button>
 
-      
-      {loading && (
-        <div className="flex justify-center items-center py-8">
-          <span className="loading loading-spinner loading-md text-primary"></span>
-        </div>
-      )}
+          {loading && (
+            <div className="flex justify-center items-center py-8">
+              <span className="loading loading-spinner loading-md text-primary"></span>
+            </div>
+          )}
 
-      
-      {error && (
-        <div className="alert alert-error alert-sm">
-          <span className="text-xs">{error}</span>
-        </div>
-      )}
+          {error && (
+            <div className="alert alert-error alert-sm">
+              <span className="text-xs">{error}</span>
+            </div>
+          )}
 
-    
-      {!loading && !error && (
-        <div className="space-y-1">
-          {categories.map(category => renderCategory(category))}
+          {!loading && !error && (
+            <div className="space-y-1">
+              {categories.map((category) => renderCategory(category))}
+            </div>
+          )}
         </div>
-      )}
-      </div>
       )}
     </div>
   );
@@ -185,4 +285,6 @@ export default function CategoryFilter({ onSelectCategory, selectedCategory }) {
 CategoryFilter.propTypes = {
   onSelectCategory: PropTypes.func.isRequired,
   selectedCategory: PropTypes.object,
+  onSelectBranch: PropTypes.func.isRequired,
+  selectedBranch: PropTypes.object,
 };

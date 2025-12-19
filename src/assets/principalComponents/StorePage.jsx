@@ -21,6 +21,7 @@ export default function StorePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedBranch, setSelectedBranch] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [thumbnailPage, setThumbnailPage] = useState(0);
 
@@ -99,6 +100,30 @@ export default function StorePage() {
           data = await fetchProducts();
         }
 
+        // Filter by branch if selected
+        if (selectedBranch) {
+          data = data
+            .map((product) => {
+              // Filter variants to only show those available in the selected branch
+              const branchVariants =
+                product.variantes?.filter((variant) => {
+                  // This assumes variants have branch information
+                  // You may need to adjust based on your actual data structure
+                  return variant.stock > 0; // or check specific branch stock
+                }) || [];
+
+              return {
+                ...product,
+                variantes: branchVariants,
+                stock_disponible: branchVariants.reduce(
+                  (sum, v) => sum + (v.stock || 0),
+                  0
+                ),
+              };
+            })
+            .filter((product) => product.stock_disponible > 0); // Only show products with stock
+        }
+
         setProducts(data);
         setError(null);
       } catch (err) {
@@ -110,7 +135,7 @@ export default function StorePage() {
     };
 
     loadProducts();
-  }, [selectedCategory]);
+  }, [selectedCategory, selectedBranch]);
 
   // Get unique colors and sizes from variants
   const getUniqueColors = (variantes) => {
@@ -312,41 +337,78 @@ export default function StorePage() {
               <CategoryFilter
                 onSelectCategory={setSelectedCategory}
                 selectedCategory={selectedCategory}
+                onSelectBranch={setSelectedBranch}
+                selectedBranch={selectedBranch}
               />
 
-              {selectedCategory && (
+              {/* Active Filters Display */}
+              {(selectedCategory || selectedBranch) && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mt-4 p-4 bg-base-200 rounded-lg"
+                  className="mt-4 p-4 bg-base-200 rounded-lg space-y-3"
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-semibold">
-                      Filtrando por:
-                    </span>
-                    <button
-                      onClick={() => setSelectedCategory(null)}
-                      className="btn btn-ghost btn-xs btn-circle"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                  <span className="badge badge-primary badge-sm">
-                    {selectedCategory.group_name}
-                  </span>
+                  {selectedCategory && (
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-semibold">
+                          Categoría:
+                        </span>
+                        <button
+                          onClick={() => setSelectedCategory(null)}
+                          className="btn btn-ghost btn-xs btn-circle"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                      <span className="badge badge-primary badge-sm">
+                        {selectedCategory.group_name}
+                      </span>
+                    </div>
+                  )}
+
+                  {selectedBranch && (
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-semibold">Sucursal:</span>
+                        <button
+                          onClick={() => setSelectedBranch(null)}
+                          className="btn btn-ghost btn-xs btn-circle"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                      <span className="badge badge-secondary badge-sm">
+                        {selectedBranch.name}
+                      </span>
+                    </div>
+                  )}
                 </motion.div>
               )}
             </div>
