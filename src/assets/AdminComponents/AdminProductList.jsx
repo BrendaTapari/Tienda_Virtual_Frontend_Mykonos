@@ -101,7 +101,6 @@ export default function AdminProductList() {
     }
   };
 
-  // Select product from search results
   const handleSelectProduct = (product) => {
     setSelectedProduct(product);
     setFormData({
@@ -112,7 +111,6 @@ export default function AdminProductList() {
     });
   };
 
-  // Add product to online store
   const handleAddToOnlineStore = async () => {
     if (!selectedProduct) {
       setError("Please select a product");
@@ -134,10 +132,8 @@ export default function AdminProductList() {
         slug: formData.slug || undefined,
       });
 
-      // Reload products
       await loadOnlineProducts();
 
-      // Reset form
       setShowAddModal(false);
       setSelectedProduct(null);
       setSearchBarcode("");
@@ -157,7 +153,6 @@ export default function AdminProductList() {
     }
   };
 
-  // Remove product from online store
   const handleRemoveFromOnlineStore = async (productId) => {
     if (
       !confirm(
@@ -186,6 +181,7 @@ export default function AdminProductList() {
 
   // Handle double click to edit product
   const handleProductDoubleClick = async (product) => {
+    console.log("📝 Producto seleccionado para editar:", product);
     setEditingProduct(product);
     setFormData({
       nombre_web: product.nombre_web || "",
@@ -197,18 +193,34 @@ export default function AdminProductList() {
     setExistingImages(product.images || []);
     setUploadedImages([]);
 
-    // Load variants by branch
     try {
+      console.log(
+        `🔄 Llamando a getProductDetailsByVariantByBranch(${product.id})...`
+      );
       const variantsData = await getProductDetailsByVariantByBranch(product.id);
-      // Inicializar cantidad_web para cada variante si no existe
+      console.log(
+        "🔍 Datos RAW del backend:",
+        JSON.stringify(variantsData, null, 2)
+      );
+      console.log(
+        "📊 Cantidad de sucursales recibidas:",
+        variantsData?.length || 0
+      );
+
       const variantsWithWeb = (variantsData || []).map((branch) => ({
         ...branch,
-        variants: (branch.variants || []).map((variant) => ({
-          ...variant,
-          cantidad_web: variant.cantidad_web || 0, // Stock asignado a la web
-          mostrar_en_web: variant.mostrar_en_web !== false,
-        })),
+        variants: (branch.variants || []).map((variant) => {
+          console.log("🔍 Variante individual:", variant);
+          return {
+            ...variant,
+            id: variant.variant_id || variant.id, // IMPORTANTE: variant_id primero
+            cantidad_web: variant.cantidad_web || 0,
+            mostrar_en_web: variant.mostrar_en_web !== false,
+          };
+        }),
       }));
+
+      console.log("✅ Variantes procesadas:", variantsWithWeb);
       setVariantsByBranch(variantsWithWeb);
     } catch (error) {
       console.error("Error loading variants:", error);
@@ -246,6 +258,7 @@ export default function AdminProductList() {
   const removeExistingImage = (index) => {
     setExistingImages((prev) => prev.filter((_, i) => i !== index));
   };
+  console.log("Informacion a subir: ", { formData, enTiendaOnline });
 
   // Update product
   const handleUpdateProduct = async () => {
@@ -287,23 +300,29 @@ export default function AdminProductList() {
       }
 
       // Step 3: Update product data with variants
-      // Preparar variantes: agrupar por barcode y construir configuracion_stock
+      // Preparar variantes: agrupar por ID y construir configuracion_stock
+      console.log("🚀 Preparando variantes para enviar al backend...");
+      console.log("📦 variantsByBranch:", variantsByBranch);
+
       const variantesMap = new Map();
 
       variantsByBranch.forEach((branch) => {
         branch.variants.forEach((variant) => {
-          if (!variantesMap.has(variant.barcode)) {
-            variantesMap.set(variant.barcode, {
-              barcode: variant.barcode,
-              size: variant.size,
-              color: variant.color,
-              color_hex: variant.color_hex,
+          console.log("🔍 Procesando variante:", { id: variant.id, variant });
+          if (!variant.id) {
+            console.warn("⚠️ Variante sin ID, saltando:", variant);
+            return; // Skip si no tiene ID
+          }
+
+          if (!variantesMap.has(variant.id)) {
+            variantesMap.set(variant.id, {
+              id: variant.id,
               mostrar_en_web: variant.mostrar_en_web !== false,
               configuracion_stock: [],
             });
           }
 
-          const variantData = variantesMap.get(variant.barcode);
+          const variantData = variantesMap.get(variant.id);
           if (variant.cantidad_web > 0) {
             variantData.configuracion_stock.push({
               sucursal_id: branch.branch_id,
@@ -321,6 +340,10 @@ export default function AdminProductList() {
         variantes: Array.from(variantesMap.values()),
       };
 
+      console.log(
+        "📤 Datos finales a enviar al backend:",
+        JSON.stringify(productData, null, 2)
+      );
       await updateProductWithVariants(editingProduct.id, productData);
 
       toast.success("Producto actualizado correctamente!");
@@ -344,9 +367,15 @@ export default function AdminProductList() {
     const variant = updatedVariants[branchIndex].variants[variantIndex];
     const maxStock = variant.quantity; // Stock físico disponible
 
-    // Validar que no exceda el stock disponible
-    const newValue = Math.max(0, Math.min(parseInt(value) || 0, maxStock));
-    variant.cantidad_web = newValue;
+    // Validar que sea un número válido
+    if (value === "") {
+      variant.cantidad_web = 0;
+    } else if (/^\d+$/.test(value)) {
+      // Solo permite números enteros positivos
+      const numValue = parseInt(value, 10);
+      variant.cantidad_web = Math.max(0, Math.min(numValue, maxStock));
+    }
+    // Si no es un número válido, no actualiza el valor
 
     setVariantsByBranch(updatedVariants);
   };
@@ -904,9 +933,9 @@ export default function AdminProductList() {
                                             </td>
                                             <td>
                                               <input
-                                                type="number"
-                                                min="0"
-                                                max={variant.quantity}
+                                                type="text"
+                                                inputMode="numeric"
+                                                pattern="[0-9]*"
                                                 className="input input-bordered input-sm w-20"
                                                 value={variant.cantidad_web}
                                                 onChange={(e) =>
@@ -916,6 +945,7 @@ export default function AdminProductList() {
                                                     e.target.value
                                                   )
                                                 }
+                                                placeholder="0"
                                               />
                                             </td>
                                             <td>
@@ -1084,7 +1114,7 @@ export default function AdminProductList() {
                           setExistingImages([]);
                         }}
                       >
-                        Cancel
+                        Cancelar
                       </button>
                       <button
                         className="btn btn-primary"
@@ -1094,12 +1124,12 @@ export default function AdminProductList() {
                         {loading ? (
                           <>
                             <span className="loading loading-spinner loading-sm"></span>
-                            Updating...
+                            Actualizanado...
                           </>
                         ) : (
                           <>
                             <ImageIcon size={18} />
-                            Update Product
+                            Actualizar Producto
                           </>
                         )}
                       </button>
