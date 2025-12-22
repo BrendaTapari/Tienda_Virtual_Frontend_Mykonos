@@ -23,6 +23,7 @@ import AdminUsers from "./assets/AdminComponents/AdminUsers.jsx";
 import AdminDiscounts from "./assets/AdminComponents/AdminDiscounts.jsx";
 import { Toaster } from "react-hot-toast";
 import CheckOut from "./assets/principalComponents/CheckOut.jsx";
+import AdminNewProduct from "./assets/AdminComponents/AdminNewProduct.jsx";
 
 function App() {
   const [location] = useLocation();
@@ -68,6 +69,7 @@ function App() {
         <Route path="/email-verification" component={EmailVerification} />
         <Route path="/order-tracking/:orderId" component={OrderTracking} />
         <Route path="/checkout" component={CheckOut} />
+        <Route path="'/newProducto" component={AdminNewProduct} />
 
         {/* Admin Routes */}
         <Route path="/admin">

@@ -1,57 +1,37 @@
 import { useState, useCallback, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
-import {
-  Upload,
-  X,
-  Image as ImageIcon,
-  ArrowLeft,
-  Trash2,
-  Save,
-  Info,
-  Percent,
-  Store,
-  DollarSign,
-} from "lucide-react";
+import { Upload, X, ArrowLeft, Save, Info, Percent, Store } from "lucide-react";
 import toast from "react-hot-toast";
 import AdminLayout from "./AdminLayout";
 import {
   uploadProductImage,
-  deleteProductImage,
-  updateProductWithVariants,
   toggleProductOnline,
 } from "../services/productService";
 import { getProductDetailsByVariantByBranch } from "../services/branchService";
 
-
-export default function EditProduct({ product, onClose, onProductUpdated }) {
+export default function AdminNewProduct({ product, onClose, onProductAdded }) {
   const [formData, setFormData] = useState({
     nombre_web: "",
     descripcion_web: "",
     precio_web: "",
     slug: "",
-    grupo: "",
     descuento: "",
   });
   const [loading, setLoading] = useState(false);
   const [uploadedImages, setUploadedImages] = useState([]);
-  const [existingImages, setExistingImages] = useState([]);
   const [variantsByBranch, setVariantsByBranch] = useState([]);
   const [enTiendaOnline, setEnTiendaOnline] = useState(true);
 
   useEffect(() => {
     if (product) {
-      console.log("📝 Producto seleccionado para editar:", product);
+      console.log("📝 Producto para agregar:", product);
       setFormData({
-        nombre_web: product.product_name || product.nombre_web || "",
-        descripcion_web: product.descripcion_web || "",
-        precio_web: product.precio_web || "",
-        slug: product.slug || "",
-        grupo: product.group || "",
+        nombre_web: product.product_name || "",
+        descripcion_web: product.description || "",
+        precio_web: product.sale_price || "",
+        slug: "",
         descuento: product.discount_percentage || "",
       });
-      setEnTiendaOnline(product.en_tienda_online !== false);
-      setExistingImages(product.images || []);
-      setUploadedImages([]);
 
       loadVariants();
     }
@@ -61,37 +41,24 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
     if (!product) return;
 
     try {
-      console.log(
-        `🔄 Llamando a getProductDetailsByVariantByBranch(${product.id})...`
-      );
+      console.log(`🔄 Cargando variantes del producto ${product.id}...`);
       const variantsData = await getProductDetailsByVariantByBranch(product.id);
-      console.log(
-        "🔍 Datos RAW del backend:",
-        JSON.stringify(variantsData, null, 2)
-      );
-      console.log(
-        "📊 Cantidad de sucursales recibidas:",
-        variantsData?.length || 0
-      );
 
       const variantsWithWeb = (variantsData || []).map((branch) => ({
         ...branch,
-        variants: (branch.variants || []).map((variant) => {
-          console.log("🔍 Variante individual:", variant);
-          return {
-            ...variant,
-            id: variant.variant_id || variant.id, // IMPORTANTE: variant_id primero
-            cantidad_web: variant.cantidad_web || 0,
-            mostrar_en_web: variant.mostrar_en_web !== false,
-          };
-        }),
+        variants: (branch.variants || []).map((variant) => ({
+          ...variant,
+          id: variant.variant_id || variant.id,
+          cantidad_web: 0, // Inicialmente 0 para producto nuevo
+          mostrar_en_web: true, // Por defecto visible
+        })),
       }));
 
-      console.log("✅ Variantes procesadas:", variantsWithWeb);
+      console.log("✅ Variantes cargadas:", variantsWithWeb);
       setVariantsByBranch(variantsWithWeb);
     } catch (error) {
       console.error("Error loading variants:", error);
-      toast.error("Error al cargar variantes");
+      toast.error("Error al cargar variantes del producto");
       setVariantsByBranch([]);
     }
   };
@@ -114,31 +81,21 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
     maxSize: 5242880, // 5MB
   });
 
-  // Remove uploaded image
   const removeUploadedImage = (index) => {
     setUploadedImages((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // Remove existing image
-  const removeExistingImage = (index) => {
-    setExistingImages((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  // Update web stock for a variant in a branch
   const handleUpdateWebStock = (branchIndex, variantIndex, value) => {
     const updatedVariants = [...variantsByBranch];
     const variant = updatedVariants[branchIndex].variants[variantIndex];
-    const maxStock = variant.quantity; // Stock físico disponible
+    const maxStock = variant.quantity;
 
-    // Validar que sea un número válido
     if (value === "") {
       variant.cantidad_web = 0;
     } else if (/^\d+$/.test(value)) {
-      // Solo permite números enteros positivos
       const numValue = parseInt(value, 10);
       variant.cantidad_web = Math.max(0, Math.min(numValue, maxStock));
     }
-    // Si no es un número válido, no actualiza el valor
 
     setVariantsByBranch(updatedVariants);
   };
@@ -150,7 +107,7 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
     setVariantsByBranch(updatedVariants);
   };
 
-  const handleUpdateProduct = async () => {
+  const handleAddProduct = async () => {
     if (!product) return;
 
     if (!formData.nombre_web || !formData.precio_web) {
@@ -161,42 +118,23 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
     try {
       setLoading(true);
 
-      const uploadPromises = uploadedImages.map((file) =>
-        uploadProductImage(product.id, file)
-      );
-      const uploadedImageResults = await Promise.all(uploadPromises);
-
-      if (uploadedImageResults.length > 0) {
-        toast.success(`${uploadedImageResults.length} imágenes subidas`);
+      // 1. Subir imágenes si hay
+      if (uploadedImages.length > 0) {
+        const uploadPromises = uploadedImages.map((file) =>
+          uploadProductImage(product.id, file)
+        );
+        await Promise.all(uploadPromises);
+        toast.success(`${uploadedImages.length} imágenes subidas`);
       }
 
-      const currentImageIds = existingImages.map((img) => img.id);
-      const originalImageIds = product.images?.map((img) => img.id) || [];
-      const imagesToDelete = originalImageIds.filter(
-        (id) => !currentImageIds.includes(id)
-      );
-
-      const deletePromises = imagesToDelete.map((imageId) =>
-        deleteProductImage(product.id, imageId)
-      );
-      await Promise.all(deletePromises);
-
-      if (imagesToDelete.length > 0) {
-        toast.success(`${imagesToDelete.length} imágenes eliminadas`);
-      }
-
-      // Step 3: Update product data with variants
-      console.log("🚀 Preparando variantes para enviar al backend...");
-      console.log("📦 variantsByBranch:", variantsByBranch);
-
+      // 2. Preparar variantes
       const variantesMap = new Map();
 
       variantsByBranch.forEach((branch) => {
         branch.variants.forEach((variant) => {
-          console.log("🔍 Procesando variante:", { id: variant.id, variant });
           if (!variant.id) {
             console.warn("⚠️ Variante sin ID, saltando:", variant);
-            return; // Skip si no tiene ID
+            return;
           }
 
           if (!variantesMap.has(variant.id)) {
@@ -217,42 +155,33 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
         });
       });
 
-      // Convertir el Map a array para enviarlo al backend
       const variantes = Array.from(variantesMap.values());
 
+      // 3. Agregar producto a tienda online
       const productData = {
-        nombre: formData.nombre_web,
-        descripcion: formData.descripcion_web || "",
-        precio_web: parseFloat(formData.precio_web),
         en_tienda_online: enTiendaOnline,
+        nombre_web: formData.nombre_web,
+        descripcion_web: formData.descripcion_web || "",
+        precio_web: parseFloat(formData.precio_web),
+        slug: formData.slug || undefined,
         discount_percentage: parseFloat(formData.descuento) || 0,
-        variantes: variantes, // Incluir las variantes en el payload
       };
 
-      console.log(
-        "📤 Datos finales a enviar al backend:",
-        JSON.stringify(productData, null, 2)
-      );
-      console.log(`📊 Total variantes a actualizar: ${variantes.length}`);
+      console.log("📤 Agregando producto a tienda:", productData);
+      await toggleProductOnline(product.id, productData);
 
-      await updateProductWithVariants(product.id, productData);
+      toast.success("¡Producto agregado a la tienda online correctamente!");
 
-      toast.success("Producto actualizado correctamente!");
-
-      setUploadedImages([]);
-      setExistingImages([]);
-      setVariantsByBranch([]);
-
-      if (onProductUpdated) {
-        await onProductUpdated();
+      if (onProductAdded) {
+        await onProductAdded();
       }
 
       if (onClose) {
         onClose();
       }
     } catch (error) {
-      console.error("Error updating product:", error);
-      toast.error(error.detail || "Error al actualizar producto");
+      console.error("Error adding product:", error);
+      toast.error(error.detail || "Error al agregar producto a la tienda");
     } finally {
       setLoading(false);
     }
@@ -260,57 +189,13 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
 
   const handleClose = () => {
     setUploadedImages([]);
-    setExistingImages([]);
     setVariantsByBranch([]);
     if (onClose) {
       onClose();
     }
   };
 
-  const handleRemoveFromOnlineStore = async () => {
-    if (
-      !confirm(
-        "¿Está seguro de que desea eliminar este producto de la tienda online?"
-      )
-    ) {
-      return;
-    }
-
-    try {
-      setLoading(true);
-      await toggleProductOnline(product.id, {
-        en_tienda_online: false,
-      });
-
-      toast.success("Producto eliminado de la tienda online");
-
-      if (onProductUpdated) {
-        await onProductUpdated();
-      }
-
-      if (onClose) {
-        onClose();
-      }
-    } catch (error) {
-      console.error("Error removing product:", error);
-      toast.error("Error al eliminar producto de la tienda online");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   if (!product) return null;
-
-  const groupName =
-    variantsByBranch[0]?.group_name ||
-    product.group ||
-    product.group_name ||
-    "-";
-  const providerName =
-    variantsByBranch[0]?.provider_name ||
-    product.provider ||
-    product.provider_name ||
-    "-";
 
   return (
     <AdminLayout>
@@ -327,26 +212,23 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
                 <ArrowLeft size={24} />
               </button>
               <div>
-                <h1 className="text-3xl font-bold">
-                  {formData.nombre_web || "Editar Producto"}
-                </h1>
+                <h1 className="text-3xl font-bold">Agregar Producto</h1>
                 <p className="text-base-content/60 text-sm">
-                  Grupo: {groupName} {" • "} Proveedor: {providerName}
+                  Configura el producto para la tienda online
                 </p>
               </div>
             </div>
             <div className="flex gap-2">
               <button
-                className="btn btn-error btn-outline"
-                onClick={handleRemoveFromOnlineStore}
+                className="btn btn-ghost"
+                onClick={handleClose}
                 disabled={loading}
               >
-                <Trash2 size={18} />
-                Eliminar de tienda
+                Cancelar
               </button>
               <button
-                className="btn btn-success  flex items-center gap-2"
-                onClick={handleUpdateProduct}
+                className="btn btn-success flex items-center gap-2"
+                onClick={handleAddProduct}
                 disabled={loading}
               >
                 {loading ? (
@@ -357,7 +239,7 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
                 ) : (
                   <>
                     <Save size={18} />
-                    Guardar Cambios
+                    Agregar a tienda
                   </>
                 )}
               </button>
@@ -368,47 +250,87 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Images */}
           <div className="lg:col-span-1 space-y-6">
-            {/* Existing Images */}
-            <div className="card bg-base-100 shadow-lg">
-              <div className="card-body">
-                <h2 className="card-title text-lg">Imágenes del producto</h2>
-                {existingImages.length > 0 ? (
-                  <div className="grid grid-cols-2 gap-3">
-                    {existingImages.map((image, index) => (
-                      <div key={index} className="relative group">
-                        <img
-                          src={
-                            image.startsWith("http")
-                              ? image
-                              : `${
-                                  import.meta.env.VITE_IMAGE_URL ||
-                                  "http://localhost:8080"
-                                }${image}`
-                          }
-                          alt={`Product ${index + 1}`}
-                          className="w-full h-40 object-cover rounded-lg"
-                        />
-                        <button
-                          onClick={() => removeExistingImage(index)}
-                          className="absolute top-2 right-2 btn btn-xs btn-circle btn-error opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <X size={14} />
-                        </button>
-                      </div>
-                    ))}
+            {/* Información de referencia del producto */}
+            <div className="card bg-info/10 border border-info shadow-lg">
+              <div className="card-body p-4">
+                <h3 className="font-bold text-sm flex items-center gap-2 mb-3">
+                  <Info size={16} />
+                  Datos de la Tienda Física
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-base-content/60">Nombre:</span>
+                    <span className="font-semibold text-right max-w-[60%]">
+                      {product?.product_name || "-"}
+                    </span>
                   </div>
-                ) : (
-                  <p className="text-base-content/60 text-sm text-center py-4">
-                    No hay imágenes
-                  </p>
-                )}
+                  <div className="flex justify-between">
+                    <span className="text-base-content/60">Grupo:</span>
+                    <span className="font-semibold">
+                      {product?.group_name || "-"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-base-content/60">Proveedor:</span>
+                    <span className="font-semibold">
+                      {product?.provider_name || "-"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-base-content/60">Código:</span>
+                    <span className="font-mono text-xs">
+                      {product?.provider_code || "-"}
+                    </span>
+                  </div>
+                  <div className="divider my-2"></div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-base-content/60">Precio tienda:</span>
+                    <span className="font-bold text-lg text-primary">
+                      ${product?.sale_price?.toLocaleString("es-AR") || "0"}
+                    </span>
+                  </div>
+                  {product?.discount_percentage > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-base-content/60">Descuento:</span>
+                      <span className="badge badge-warning badge-sm">
+                        {product.discount_percentage}% OFF
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="alert alert-info mt-3 p-2">
+                  <Info size={14} />
+                  <span className="text-xs">
+                    Estos son los datos actuales en la tienda física. Úsalos
+                    como referencia.
+                  </span>
+                </div>
               </div>
             </div>
+
+            {/* Imagen existente del producto */}
+            {product.image_url && (
+              <div className="card bg-base-100 shadow-lg">
+                <div className="card-body">
+                  <h2 className="card-title text-lg">Imagen actual</h2>
+                  <img
+                    src={`${
+                      import.meta.env.VITE_API_URL || "http://localhost:3000"
+                    }${product.image_url}`}
+                    alt={product.product_name}
+                    className="w-full h-64 object-cover rounded-lg"
+                  />
+                  <p className="text-xs text-base-content/60 text-center">
+                    Esta imagen ya existe en el sistema
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Upload New Images */}
             <div className="card bg-base-100 shadow-lg">
               <div className="card-body">
-                <h3 className="font-semibold mb-2">Agregar nuevas imágenes</h3>
+                <h3 className="font-semibold mb-2">Agregar más imágenes</h3>
                 <div
                   {...getRootProps()}
                   className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
@@ -429,7 +351,7 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
                   ) : (
                     <div>
                       <p className="text-base-content/60 text-sm mb-1">
-                        Arrastra imágenes o haz clic para seleccionar
+                        Arrastra imágenes o haz clic
                       </p>
                       <p className="text-xs text-base-content/40">
                         JPG, PNG, WEBP (Max 5MB)
@@ -438,7 +360,6 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
                   )}
                 </div>
 
-                {/* Preview of uploaded images */}
                 {uploadedImages.length > 0 && (
                   <div className="mt-4">
                     <p className="text-sm font-semibold mb-2">
@@ -470,9 +391,9 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
             </div>
           </div>
 
-          {/* Right Column - Product Info & Settings */}
+          {/* Right Column - Product Info */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Online Store Visibility - Destacado */}
+            {/* Online Store Visibility */}
             <div
               className={`card shadow-xl border-2 transition-all ${
                 enTiendaOnline
@@ -498,8 +419,8 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
                       </h3>
                       <p className="text-sm opacity-80">
                         {enTiendaOnline
-                          ? "Este producto está visible en la tienda online"
-                          : "Este producto NO está visible en la tienda online"}
+                          ? "✅ Este producto se publicará en la tienda"
+                          : "❌ Este producto NO se publicará"}
                       </p>
                     </div>
                   </div>
@@ -522,7 +443,6 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
                 </h2>
 
                 <div className="space-y-6">
-                  {/* Nombre y Precio - Los más importantes */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="form-control">
                       <label className="label">
@@ -532,7 +452,7 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
                       </label>
                       <input
                         type="text"
-                        className="input input-bordered input-lg "
+                        className="input input-bordered input-lg"
                         value={formData.nombre_web}
                         onChange={(e) =>
                           setFormData({
@@ -552,44 +472,41 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
                         </span>
                       </label>
                       <div className="relative">
-
-                        <label className="input validator">
-                          <DollarSign size={16} className="inline-block mr-1" />
-                          <input
-                            type="text"
-                            inputMode="decimal"
-                            className="font-semibold input-lg"
-                            value={formData.precio_web}
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              // Permite números, punto decimal y vacío
-                              if (value === "" || /^\d*\.?\d*$/.test(value)) {
-                                setFormData({
-                                  ...formData,
-                                  precio_web: value,
-                                });
-                              }
-                            }}
-                            required
-                            placeholder="0.00"
-                          />
-                        </label>
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold opacity-60">
+                          $
+                        </span>
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          className="input input-bordered input-lg pl-10 font-bold text-xl"
+                          value={formData.precio_web}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            if (value === "" || /^\d*\.?\d*$/.test(value)) {
+                              setFormData({
+                                ...formData,
+                                precio_web: value,
+                              });
+                            }
+                          }}
+                          required
+                          placeholder="0.00"
+                        />
                       </div>
                     </div>
                   </div>
 
-                  {/* Descripción - Ancho completo */}
                   <div className="form-control">
                     <label className="label">
                       <span className="label-text font-semibold text-base">
                         Descripción del producto
                       </span>
                       <span className="label-text-alt text-xs opacity-60">
-                        (Opcional)
+                        Opcional
                       </span>
                     </label>
                     <textarea
-                      className="textarea textarea-bordered flex w-full h-28 text-base"
+                      className="textarea textarea-bordered h-28 text-base"
                       value={formData.descripcion_web}
                       onChange={(e) =>
                         setFormData({
@@ -597,11 +514,10 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
                           descripcion_web: e.target.value,
                         })
                       }
-                      placeholder="Describe las características principales del producto, materiales, cuidados, etc."
+                      placeholder="Describe las características principales del producto..."
                     />
                   </div>
 
-                  {/* Slug - Más pequeño y opcional */}
                   <div className="form-control">
                     <label className="label">
                       <span className="label-text font-semibold">
@@ -613,7 +529,7 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
                     </label>
                     <input
                       type="text"
-                      className="input input-bordered flex"
+                      className="input input-bordered"
                       value={formData.slug}
                       onChange={(e) =>
                         setFormData({ ...formData, slug: e.target.value })
@@ -646,20 +562,18 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
                   <div className="form-control">
                     <label className="label">
                       <span className="label-text font-semibold">
-                        Descuento actual
+                        Descuento
                       </span>
                     </label>
                     <div className="flex items-center gap-2">
                       <input
                         type="text"
                         inputMode="decimal"
-                        className="input input-bordered input-lg flex-1"
+                        className="input input-bordered flex-1"
                         value={formData.descuento}
                         onChange={(e) => {
                           const value = e.target.value;
-
                           if (value === "" || /^\d*\.?\d*$/.test(value)) {
-
                             const numValue = parseFloat(value);
                             if (
                               value === "" ||
@@ -685,8 +599,8 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
                           Precio con descuento
                         </span>
                       </label>
-                      <div className="input input-bordered input-lg flex items-center bg-base-200">
-                        <span className="font-semibold  text-success">
+                      <div className="input input-bordered flex items-center bg-base-200">
+                        <span className="font-semibold text-success">
                           $
                           {(
                             formData.precio_web *
@@ -697,29 +611,10 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
                     </div>
                   )}
                 </div>
-
-                <div className="alert alert-info mt-4">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    className="stroke-current shrink-0 w-6 h-6"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <span className="text-sm">
-                    El descuento se aplicará automáticamente en la tienda online
-                  </span>
-                </div>
               </div>
             </div>
 
-            {/* Stock by Branch Section */}
+            {/* Stock Section */}
             <div className="card bg-base-100 shadow-lg">
               <div className="card-body">
                 <h2 className="card-title text-xl font-semibold mb-4">
@@ -729,20 +624,8 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
 
                 {variantsByBranch.length === 0 ? (
                   <div className="alert alert-info">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      className="stroke-current shrink-0 w-6 h-6"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    <span>No se encontraron variantes para este producto</span>
+                    <Info size={20} />
+                    <span>Cargando variantes del producto...</span>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -765,7 +648,7 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
                             <table className="table table-sm table-zebra">
                               <thead>
                                 <tr>
-                                  <th>Código de barras</th>
+                                  <th>Código</th>
                                   <th>Color</th>
                                   <th>Talle</th>
                                   <th>Stock Físico</th>
@@ -860,9 +743,9 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
                     />
                   </svg>
                   <span className="text-sm">
-                    <strong>Stock Web:</strong> Cantidad de unidades que se
-                    mostrarán disponibles en la tienda online. No puede exceder
-                    el stock físico disponible en cada sucursal.
+                    <strong>Stock Web:</strong> Asigna la cantidad que estará
+                    disponible en la tienda online (no puede exceder el stock
+                    físico).
                   </span>
                 </div>
               </div>

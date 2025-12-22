@@ -33,7 +33,7 @@ const fetchAdminInfoProducts = async () => {
     console.error("Error fetching admin info products:", error);
     throw error.response?.data || error;
   }
-}
+};
 /**
  * Fetch product by ID
  * @param {number} productId - Product ID
@@ -141,11 +141,16 @@ const fetchAllProducts = async (providerCode = null) => {
     if (!token) throw new Error("Authentication required");
 
     const params = providerCode
-      ? `?provider_code=${encodeURIComponent(providerCode)}`
+      ? `?barcode=${encodeURIComponent(providerCode)}`
       : "";
+    console.log("🌐 Haciendo petición a:", `${API_URL}/all${params}`);
     const response = await axios.get(`${API_URL}/all${params}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
+    console.log("✅ Respuesta del backend:", response);
+    console.log("📦 response.data:", response.data);
+    console.log("📦 Tipo de response.data:", typeof response.data);
+    console.log("📦 Es array response.data?:", Array.isArray(response.data));
     return response.data;
   } catch (error) {
     console.error("Error fetching all products:", error);
@@ -403,6 +408,21 @@ const searchProductsByBarcodeAdmin = async (barcode) => {
   }
 };
 
+const searProductByIdAdmin = async (id) => {
+  try {
+    const token = getAuthToken();
+    if (!token) throw new Error("Authentication required");
+
+    const response = await axios.get(`${API_URL}/allProductsInfo/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching product with ID ${id}:`, error);
+    throw error.response?.data || error;
+  }
+};
+
 export {
   // Public
   fetchProducts,
@@ -426,4 +446,5 @@ export {
   getProductVariants,
   updateProductWithVariants,
   searchProductsByBarcodeAdmin,
+  searProductByIdAdmin,
 };

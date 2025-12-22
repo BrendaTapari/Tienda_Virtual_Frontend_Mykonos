@@ -1,15 +1,17 @@
 import AdminLayout from "../AdminComponents/AdminLayout";
 import EditProduct from "../AdminComponents/EditProduct";
+import AdminNewProduct from "../AdminComponents/AdminNewProduct";
 import { useState, useEffect } from "react";
 import {
   fetchProducts,
   fetchAllProducts,
   toggleProductOnline,
   searchProductsByBarcodeAdmin,
+  searProductByIdAdmin,
 } from "../services/productService";
 import { motion, AnimatePresence } from "motion/react";
 import toast from "react-hot-toast";
-import { BrushCleaning } from "lucide-react";
+import { Plus, Search, X, BrushCleaning } from "lucide-react";
 
 export default function AdminProductList() {
   const [onlineProducts, setOnlineProducts] = useState([]);
@@ -22,6 +24,7 @@ export default function AdminProductList() {
   const [searchLoading, setSearchLoading] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [newProduct, setNewProduct] = useState(null);
   const [error, setError] = useState(null);
 
   const [formData, setFormData] = useState({
@@ -53,25 +56,39 @@ export default function AdminProductList() {
   console.log("Online Products:", onlineProducts);
   const handleBarcodeSearch = async () => {
     if (!searchBarcode.trim()) {
-      setError("Please enter a barcode");
+      toast.error("Por favor ingresa un código de barras");
       return;
     }
 
     try {
       setSearchLoading(true);
       setError(null);
+      console.log("🔍 Buscando productos con código:", searchBarcode);
       const products = await fetchAllProducts(searchBarcode);
+      console.log("📦 Productos recibidos del backend:", products);
+      console.log("📦 Tipo de productos:", typeof products);
+      console.log("📦 Es array?:", Array.isArray(products));
 
-      if (products.length === 0) {
-        setError("No product found with that barcode");
+      // Asegurar que products sea un array
+      const productsArray = Array.isArray(products)
+        ? products
+        : products
+        ? [products]
+        : [];
+      console.log("📦 Productos como array:", productsArray);
+
+      if (productsArray.length === 0) {
+        toast.error("No se encontraron productos con ese código de barras");
         setAllProducts([]);
       } else {
-        setAllProducts(products);
+        setAllProducts(productsArray);
         setShowAddModal(true);
+        toast.success(`${productsArray.length} producto(s) encontrado(s)`);
       }
     } catch (error) {
       console.error("Error searching products:", error);
-      setError("Error searching for product");
+      toast.error("Error al buscar productos");
+      setAllProducts([]);
     } finally {
       setSearchLoading(false);
     }
@@ -90,8 +107,9 @@ export default function AdminProductList() {
       setError(null);
       const results = await searchProductsByBarcodeAdmin(searchOnlineBarcode);
 
-      // Filtrar solo los productos que están en línea
-      const onlineResults = results.filter((p) => p.en_tienda_online);
+      const resultsArray = Array.isArray(results) ? results : [results];
+
+      const onlineResults = resultsArray.filter((p) => p && p.en_tienda_online);
 
       if (onlineResults.length === 0) {
         toast.error(
@@ -209,6 +227,27 @@ export default function AdminProductList() {
     await loadOnlineProducts();
   };
 
+  console.log(
+    "Resultado de buscar por codigo de barra en linea:",
+    filteredOnlineProducts
+  );
+  console.log("Codigo de barra buscado en linea:", searchOnlineBarcode);
+  console.log(
+    " resultado de Codigo de barras buscado en toda la bd: ",
+    allProducts
+  );
+
+  if (newProduct) {
+    return (
+      <AdminNewProduct
+        product={newProduct}
+        onClose={() => setNewProduct(null)}
+        onProductAdded={handleProductUpdated}
+      />
+    );
+  }
+
+  // Si hay un producto siendo editado, mostrar la página de edición
   if (editingProduct) {
     return (
       <EditProduct
@@ -280,7 +319,7 @@ export default function AdminProductList() {
                 {searchLoading ? (
                   <span className="loading loading-spinner loading-sm"></span>
                 ) : (
-                  "Search"
+                  <Search className=" h-4 w-4" />
                 )}
               </button>
             </div>
@@ -473,7 +512,10 @@ export default function AdminProductList() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                onClick={() => setShowAddModal(false)}
+                onClick={() => {
+                  setShowAddModal(false);
+                  setAllProducts([]);
+                }}
                 className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
               />
 
@@ -483,174 +525,181 @@ export default function AdminProductList() {
                 exit={{ opacity: 0, scale: 0.9 }}
                 className="fixed inset-0 flex items-center justify-center z-50 p-8"
               >
-                <div className="card bg-base-100 w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
+                <div className="card bg-base-100 w-full max-w-4xl shadow-2xl max-h-[90vh] overflow-y-auto">
                   <div className="card-body">
-                    <h2 className="card-title text-2xl mb-4">
-                      Add Product to Online Store
-                    </h2>
-
-                    {/* Search Results */}
-                    {allProducts.length > 0 && !selectedProduct && (
-                      <div className="mb-6">
-                        <h3 className="font-bold mb-2">Search Results:</h3>
-                        <div className="space-y-2">
-                          {allProducts.map((product) => (
-                            <div
-                              key={product.id}
-                              className="card bg-base-200 cursor-pointer hover:bg-base-300 transition-colors"
-                              onClick={() => handleSelectProduct(product)}
-                            >
-                              <div className="card-body p-4">
-                                <div className="flex justify-between items-center">
-                                  <div>
-                                    <p className="font-bold">
-                                      {product.product_name}
-                                    </p>
-                                    <p className="text-sm text-base-content/60">
-                                      Barcode: {product.provider_code} | Price:
-                                      ${product.sale_price}
-                                    </p>
-                                    <span
-                                      className={`badge badge-sm ${
-                                        product.en_tienda_online
-                                          ? "badge-success"
-                                          : "badge-ghost"
-                                      }`}
-                                    >
-                                      {product.en_tienda_online
-                                        ? "Already Online"
-                                        : "Not Online"}
-                                    </span>
-                                  </div>
-                                  <button className="btn btn-sm btn-primary">
-                                    Select
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Product Form */}
-                    {selectedProduct && (
-                      <div className="space-y-4">
-                        <div className="alert alert-info">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            className="stroke-current shrink-0 w-6 h-6"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                            ></path>
-                          </svg>
-                          <span>Selected: {selectedProduct.product_name}</span>
-                        </div>
-
-                        <div className="form-control">
-                          <label className="label">
-                            <span className="label-text">
-                              Product Name (for web) *
-                            </span>
-                          </label>
-                          <input
-                            type="text"
-                            className="input input-bordered"
-                            value={formData.nombre_web}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                nombre_web: e.target.value,
-                              })
-                            }
-                            required
-                          />
-                        </div>
-
-                        <div className="form-control">
-                          <label className="label">
-                            <span className="label-text">
-                              Description (for web)
-                            </span>
-                          </label>
-                          <textarea
-                            className="textarea textarea-bordered h-24"
-                            value={formData.descripcion_web}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                descripcion_web: e.target.value,
-                              })
-                            }
-                          />
-                        </div>
-
-                        <div className="form-control">
-                          <label className="label">
-                            <span className="label-text">
-                              Price (for web) *
-                            </span>
-                          </label>
-                          <input
-                            type="number"
-                            step="0.01"
-                            className="input input-bordered"
-                            value={formData.precio_web}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                precio_web: e.target.value,
-                              })
-                            }
-                            required
-                          />
-                        </div>
-
-                        <div className="form-control">
-                          <label className="label">
-                            <span className="label-text">
-                              Slug (optional, auto-generated if empty)
-                            </span>
-                          </label>
-                          <input
-                            type="text"
-                            className="input input-bordered"
-                            value={formData.slug}
-                            onChange={(e) =>
-                              setFormData({ ...formData, slug: e.target.value })
-                            }
-                            placeholder="product-name-slug"
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="card-actions justify-end mt-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <h2 className="card-title text-2xl">
+                        Resultados de búsqueda
+                      </h2>
                       <button
-                        className="btn btn-ghost"
                         onClick={() => {
                           setShowAddModal(false);
-                          setSelectedProduct(null);
                           setAllProducts([]);
                         }}
+                        className="btn btn-sm btn-circle btn-ghost"
                       >
-                        Cancel
+                        <X size={20} />
                       </button>
-                      {selectedProduct && (
-                        <button
-                          className="btn btn-primary"
-                          onClick={handleAddToOnlineStore}
-                        >
-                          Add to Online Store
-                        </button>
-                      )}
                     </div>
+
+                    {/* Search Results - Grid mejorado */}
+                    {allProducts.length > 0 && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {allProducts.map((product) => (
+                          <div
+                            key={product.id}
+                            className="card bg-base-200 shadow-md hover:shadow-xl transition-all"
+                          >
+                            <div className="card-body p-4">
+                              {/* Imagen del producto */}
+                              {product.image_url && (
+                                <div className="w-full h-48 mb-3 rounded-lg overflow-hidden bg-base-300">
+                                  <img
+                                    src={`${
+                                      import.meta.env.VITE_API_URL ||
+                                      "http://localhost:3000"
+                                    }${product.image_url}`}
+                                    alt={product.product_name}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      e.target.style.display = "none";
+                                      e.target.parentElement.innerHTML =
+                                        '<div class="w-full h-full flex items-center justify-center text-base-content/40"><span>Sin imagen</span></div>';
+                                    }}
+                                  />
+                                </div>
+                              )}
+
+                              {/* Información del producto */}
+                              <div className="space-y-2">
+                                <h3 className="font-bold text-lg line-clamp-2">
+                                  {product.product_name}
+                                </h3>
+
+                                <div className="flex flex-wrap gap-2">
+                                  <span className="badge badge-primary badge-sm">
+                                    {product.group_name || "Sin grupo"}
+                                  </span>
+                                  <span
+                                    className={`badge badge-sm ${
+                                      product.en_tienda_online
+                                        ? "badge-success"
+                                        : "badge-ghost"
+                                    }`}
+                                  >
+                                    {product.en_tienda_online
+                                      ? "✅ Ya en tienda"
+                                      : "⭕ No publicado"}
+                                  </span>
+                                  {product.discount_percentage > 0 && (
+                                    <span className="badge badge-warning badge-sm">
+                                      {product.discount_percentage}% OFF
+                                    </span>
+                                  )}
+                                </div>
+
+                                <div className="divider my-2"></div>
+
+                                <div className="grid grid-cols-2 gap-2 text-sm">
+                                  <div>
+                                    <p className="text-base-content/60">
+                                      Código:
+                                    </p>
+                                    <p className="font-mono font-semibold">
+                                      {product.provider_code}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-base-content/60">
+                                      Precio:
+                                    </p>
+                                    <p className="font-bold text-primary text-lg">
+                                      $
+                                      {product.sale_price?.toLocaleString(
+                                        "es-AR"
+                                      )}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                {product.description && (
+                                  <p className="text-sm text-base-content/70 line-clamp-2 mt-2">
+                                    {product.description}
+                                  </p>
+                                )}
+
+                                <div className="text-xs text-base-content/60 mt-2">
+                                  <p>Proveedor: {product.provider_name}</p>
+                                </div>
+                              </div>
+
+                              {/* Botón de acción */}
+                              <div className="card-actions mt-4">
+                                {product.en_tienda_online ? (
+                                  <button
+                                    className="btn btn-sm btn-outline w-full"
+                                    onClick={() => {
+                                      // Buscar el producto completo en onlineProducts para editarlo
+                                      const fullProduct = onlineProducts.find(
+                                        (p) => p.id === product.id
+                                      );
+                                      if (fullProduct) {
+                                        setEditingProduct(fullProduct);
+                                        setShowAddModal(false);
+                                      }
+                                    }}
+                                  >
+                                    Editar producto
+                                  </button>
+                                ) : (
+                                  <button
+                                    className="btn btn-primary btn-sm w-full gap-2"
+                                    onClick={async () => {
+                                      try {
+                                        setSearchLoading(true);
+                                        console.log(
+                                          "🔍 Obteniendo datos completos del producto ID:",
+                                          product.id
+                                        );
+                                        // Obtener información completa del producto
+                                        const fullProductData =
+                                          await searProductByIdAdmin(
+                                            product.id
+                                          );
+                                        console.log(
+                                          "✅ Datos completos obtenidos:",
+                                          fullProductData
+                                        );
+                                        setNewProduct(fullProductData);
+                                        setShowAddModal(false);
+                                      } catch (error) {
+                                        console.error(
+                                          "Error obteniendo datos completos:",
+                                          error
+                                        );
+                                        toast.error(
+                                          "Error al cargar información completa del producto"
+                                        );
+                                      } finally {
+                                        setSearchLoading(false);
+                                      }
+                                    }}
+                                    disabled={searchLoading}
+                                  >
+                                    {searchLoading ? (
+                                      <span className="loading loading-spinner loading-xs"></span>
+                                    ) : (
+                                      <Plus size={18} />
+                                    )}
+                                    Agregar a tienda web
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </motion.div>
