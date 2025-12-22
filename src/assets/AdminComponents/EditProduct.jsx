@@ -10,6 +10,7 @@ import {
   Info,
   Percent,
   Store,
+  DollarSign,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import AdminLayout from "./AdminLayout";
@@ -215,18 +216,24 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
         });
       });
 
+      // Convertir el Map a array para enviarlo al backend
+      const variantes = Array.from(variantesMap.values());
+
       const productData = {
         nombre: formData.nombre_web,
         descripcion: formData.descripcion_web || "",
         precio_web: parseFloat(formData.precio_web),
         en_tienda_online: enTiendaOnline,
         discount_percentage: parseFloat(formData.descuento) || 0,
+        variantes: variantes, // Incluir las variantes en el payload
       };
 
       console.log(
         "📤 Datos finales a enviar al backend:",
         JSON.stringify(productData, null, 2)
       );
+      console.log(`📊 Total variantes a actualizar: ${variantes.length}`);
+
       await updateProductWithVariants(product.id, productData);
 
       toast.success("Producto actualizado correctamente!");
@@ -293,6 +300,17 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
 
   if (!product) return null;
 
+  const groupName =
+    variantsByBranch[0]?.group_name ||
+    product.group ||
+    product.group_name ||
+    "-";
+  const providerName =
+    variantsByBranch[0]?.provider_name ||
+    product.provider ||
+    product.provider_name ||
+    "-";
+
   return (
     <AdminLayout>
       <div className="max-w-7xl mx-auto">
@@ -312,8 +330,7 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
                   {formData.nombre_web || "Editar Producto"}
                 </h1>
                 <p className="text-base-content/60 text-sm">
-                  Grupo: {product.group_name || "-"} {" • "} Proveedor:{" "}
-                  {product.provider_name || "-"}
+                  Grupo: {groupName} {" • "} Proveedor: {providerName}
                 </p>
               </div>
             </div>
@@ -454,118 +471,165 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
 
           {/* Right Column - Product Info & Settings */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Online Store Visibility - Destacado */}
+            <div
+              className={`card shadow-xl border-2 transition-all ${
+                enTiendaOnline
+                  ? "bg-success/10 border-success"
+                  : "bg-error/10 border-error"
+              }`}
+            >
+              <div className="card-body">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={`p-3 rounded-full ${
+                        enTiendaOnline
+                          ? "bg-success text-success-content"
+                          : "bg-error text-error-content"
+                      }`}
+                    >
+                      <Store size={24} />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold">
+                        Visibilidad en Tienda Online
+                      </h3>
+                      <p className="text-sm opacity-80">
+                        {enTiendaOnline
+                          ? "Este producto está visible en la tienda online"
+                          : "Este producto NO está visible en la tienda online"}
+                      </p>
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    className="toggle toggle-lg toggle-success"
+                    checked={enTiendaOnline}
+                    onChange={(e) => setEnTiendaOnline(e.target.checked)}
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Product Information */}
             <div className="card bg-base-100 shadow-lg">
               <div className="card-body">
-                <h2 className="card-title text-xl font-semibold mb-4">
+                <h2 className="card-title text-xl font-semibold mb-6">
                   <Info size={20} className="inline-block mr-2" />
                   Información del producto
                 </h2>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-6">
+                  {/* Nombre y Precio - Los más importantes */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="form-control">
+                      <label className="label">
+                        <span className="label-text font-bold text-base">
+                          Nombre del producto *
+                        </span>
+                      </label>
+                      <input
+                        type="text"
+                        className="input input-bordered input-lg "
+                        value={formData.nombre_web}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            nombre_web: e.target.value,
+                          })
+                        }
+                        required
+                        placeholder="Ej: Remera básica de algodón"
+                      />
+                    </div>
+
+                    <div className="form-control">
+                      <label className="label">
+                        <span className="label-text font-bold text-base">
+                          Precio web *
+                        </span>
+                      </label>
+                      <div className="relative">
+
+                        <label className="input validator">
+                          <DollarSign size={16} className="inline-block mr-1" />
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            className="font-semibold input-lg"
+                            value={formData.precio_web}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              // Permite números, punto decimal y vacío
+                              if (value === "" || /^\d*\.?\d*$/.test(value)) {
+                                setFormData({
+                                  ...formData,
+                                  precio_web: value,
+                                });
+                              }
+                            }}
+                            required
+                            placeholder="0.00"
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Descripción - Ancho completo */}
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text font-semibold text-base">
+                        Descripción del producto
+                      </span>
+                      <span className="label-text-alt text-xs opacity-60">
+                        (Opcional)
+                      </span>
+                    </label>
+                    <textarea
+                      className="textarea textarea-bordered flex w-full h-28 text-base"
+                      value={formData.descripcion_web}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          descripcion_web: e.target.value,
+                        })
+                      }
+                      placeholder="Describe las características principales del producto, materiales, cuidados, etc."
+                    />
+                  </div>
+
+                  {/* Slug - Más pequeño y opcional */}
                   <div className="form-control">
                     <label className="label">
                       <span className="label-text font-semibold">
-                        Nombre del producto *
+                        URL personalizada (Slug)
+                      </span>
+                      <span className="label-text-alt text-xs opacity-60">
+                        Opcional - Se genera automáticamente
                       </span>
                     </label>
                     <input
                       type="text"
-                      className="input input-bordered"
-                      value={formData.nombre_web}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          nombre_web: e.target.value,
-                        })
-                      }
-                      required
-                    />
-                  </div>
-
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text font-semibold">
-                        Precio web *
-                      </span>
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      className="input input-bordered"
-                      value={formData.precio_web}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          precio_web: e.target.value,
-                        })
-                      }
-                      required
-                    />
-                  </div>
-
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text font-semibold">Grupo</span>
-                    </label>
-                    <input
-                      type="text"
-                      className="input input-bordered"
-                      value={formData.grupo}
-                      onChange={(e) =>
-                        setFormData({ ...formData, grupo: e.target.value })
-                      }
-                      disabled
-                    />
-                  </div>
-
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text font-semibold">Slug</span>
-                    </label>
-                    <input
-                      type="text"
-                      className="input input-bordered"
+                      className="input input-bordered flex"
                       value={formData.slug}
                       onChange={(e) =>
                         setFormData({ ...formData, slug: e.target.value })
                       }
-                      placeholder="producto-slug"
+                      placeholder="producto-slug-personalizado"
                     />
+                    {formData.slug && (
+                      <label className="label">
+                        <span className="label-text-alt">
+                          Vista previa:{" "}
+                          <code className="bg-base-200 px-2 py-1 rounded">
+                            /productos/{formData.slug}
+                          </code>
+                        </span>
+                      </label>
+                    )}
                   </div>
-                </div>
-
-                <div className="form-control mt-4">
-                  <label className="label">
-                    <span className="label-text font-semibold">
-                      Descripción
-                    </span>
-                  </label>
-                  <textarea
-                    className="textarea textarea-bordered h-24"
-                    value={formData.descripcion_web}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        descripcion_web: e.target.value,
-                      })
-                    }
-                    placeholder="Descripción del producto para la web"
-                  />
-                </div>
-
-                <div className="form-control mt-4">
-                  <label className="label cursor-pointer justify-start gap-4">
-                    <input
-                      type="checkbox"
-                      className="toggle toggle-primary"
-                      checked={enTiendaOnline}
-                      onChange={(e) => setEnTiendaOnline(e.target.checked)}
-                    />
-                    <span className="label-text font-semibold">
-                      Mostrar en Tienda Online
-                    </span>
-                  </label>
                 </div>
               </div>
             </div>
@@ -588,13 +652,13 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
                       <input
                         type="text"
                         inputMode="decimal"
-                        className="input input-bordered flex-1"
+                        className="input input-bordered input-lg flex-1"
                         value={formData.descuento}
                         onChange={(e) => {
                           const value = e.target.value;
-                          // Permite números, punto decimal y vacío
+
                           if (value === "" || /^\d*\.?\d*$/.test(value)) {
-                            // Limita a máximo 100
+
                             const numValue = parseFloat(value);
                             if (
                               value === "" ||
@@ -620,8 +684,8 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
                           Precio con descuento
                         </span>
                       </label>
-                      <div className="input input-bordered flex items-center bg-base-200">
-                        <span className="font-semibold text-success">
+                      <div className="input input-bordered input-lg flex items-center bg-base-200">
+                        <span className="font-semibold  text-success">
                           $
                           {(
                             formData.precio_web *

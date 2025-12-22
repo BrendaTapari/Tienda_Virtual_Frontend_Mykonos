@@ -9,6 +9,7 @@ import {
 } from "../services/productService";
 import { motion, AnimatePresence } from "motion/react";
 import toast from "react-hot-toast";
+import { BrushCleaning } from "lucide-react";
 
 export default function AdminProductList() {
   const [onlineProducts, setOnlineProducts] = useState([]);
@@ -351,6 +352,7 @@ export default function AdminProductList() {
                       <th>#</th>
                       <th>Imagen</th>
                       <th>Nombre</th>
+                      <th>Proveedor</th>
                       <th>Categoría</th>
                       <th>Precio original web</th>
                       <th>Descuento</th>
@@ -360,84 +362,102 @@ export default function AdminProductList() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredOnlineProducts.map((product) => (
-                      <tr
-                        key={product.id}
-                        onDoubleClick={() => handleProductDoubleClick(product)}
-                        className="cursor-pointer hover:bg-base-200 transition-colors"
-                        title="Double click to edit"
-                      >
-                        <td>{product.id}</td>
-                        <td>
-                          {product.images && product.images.length > 0 ? (
-                            <div className="avatar">
-                              <div className="w-12 h-12 rounded">
-                                <img
-                                  src={`${
-                                    import.meta.env.VITE_API_URL ||
-                                    "http://localhost:3000"
-                                  }${product.images[0]}`}
-                                  alt={product.nombre_web}
-                                  className="object-cover"
-                                />
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="w-12 h-12 bg-base-300 rounded flex items-center justify-center">
-                              <span className="text-xs">Sin imagen</span>
-                            </div>
-                          )}
-                        </td>
-                        <td className="font-medium">{product.nombre_web}</td>
-                        <td className="text-sm">{product.category || "-"}</td>
-                        <td className="font-semibold text-primary">
-                          ${(product.precio_web || 0).toLocaleString("es-AR")}
-                        </td>
-                          <td>
-                          {product.discount_percentage ? (
-                            <div className="flex flex-wrap gap-1">
-                              <span className="badge badge-info badge-sm">
-                                {product.discount_percentage}% off
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-base-content/40">
-                              0%
-                            </span>
-                          )}
-                        </td>
-                        <td className="font-bold text-accent">
-                          $
-                          {(product.precio_web *
-                            (1 - (product.discount_percentage || 0) / 100)
-                          ).toLocaleString("es-AR")}
-                        </td>
+                    {filteredOnlineProducts.map((product) => {
+                      // Calcular stock real sumando el stock de todas las variantes
+                      const stockTotal =
+                        product.variantes?.reduce((total, variant) => {
+                          return total + (variant.stock || 0);
+                        }, 0) || 0;
 
-                        <td>
-                          <span
-                            className={`badge ${
-                              product.stock_disponible > 0
-                                ? "badge-success"
-                                : "badge-error"
-                            }`}
-                          >
-                            {product.stock_disponible} unidades
-                          </span>
-                        </td>
-                      
-                        <td>
-                          <button
-                            className="btn btn-sm btn-error btn-outline"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRemoveFromOnlineStore(product.id);
-                            }}
-                          >
-                            Quitar
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                      return (
+                        <tr
+                          key={product.id}
+                          onDoubleClick={() =>
+                            handleProductDoubleClick(product)
+                          }
+                          className="cursor-pointer hover:bg-base-200 transition-colors"
+                          title="Double click to edit"
+                        >
+                          <td>{product.id}</td>
+                          <td>
+                            {product.images && product.images.length > 0 ? (
+                              <div className="avatar">
+                                <div className="w-12 h-12 rounded">
+                                  <img
+                                    src={`${
+                                      import.meta.env.VITE_API_URL ||
+                                      "http://localhost:3000"
+                                    }${product.images[0]}`}
+                                    alt={product.nombre_web}
+                                    className="object-cover"
+                                  />
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="w-12 h-12 bg-base-300 rounded flex items-center justify-center">
+                                <span className="text-xs">Sin imagen</span>
+                              </div>
+                            )}
+                          </td>
+                          <td className="font-medium">{product.nombre_web}</td>
+                          <td className="text-sm">{product.provider || "-"}</td>
+                          <td className="text-sm">{product.category || "-"}</td>
+                          <td className="font-semibold text-primary">
+                            ${(product.precio_web || 0).toLocaleString("es-AR")}
+                          </td>
+                          <td>
+                            {product.discount_percentage ? (
+                              <div className="flex flex-wrap gap-1">
+                                <span className="badge badge-info badge-sm">
+                                  {product.discount_percentage}% off
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-base-content/40">0%</span>
+                            )}
+                          </td>
+                          <td className="font-bold text-accent">
+                            $
+                            {(
+                              product.precio_web *
+                              (1 - (product.discount_percentage || 0) / 100)
+                            ).toLocaleString("es-AR")}
+                          </td>
+
+                          <td>
+                            <div className="flex flex-col gap-1">
+                              <span
+                                className={`badge badge-sm ${
+                                  stockTotal > 0
+                                    ? "badge-success"
+                                    : "badge-error"
+                                }`}
+                              >
+                                {stockTotal} unidades
+                              </span>
+                              {product.variantes &&
+                                product.variantes.length > 1 && (
+                                  <span className="text-xs text-base-content/60">
+                                    {product.variantes.length} variantes
+                                  </span>
+                                )}
+                            </div>
+                          </td>
+
+                          <td>
+                            <button
+                              className="btn btn-sm btn-error btn-outline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveFromOnlineStore(product.id);
+                              }}
+                            >
+                              <BrushCleaning className=" h-4 w-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
