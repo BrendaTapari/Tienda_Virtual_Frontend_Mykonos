@@ -22,7 +22,6 @@ import {
 } from "../services/productService";
 import { getProductDetailsByVariantByBranch } from "../services/branchService";
 
-
 export default function EditProduct({ product, onClose, onProductUpdated }) {
   const [formData, setFormData] = useState({
     nombre_web: "",
@@ -31,12 +30,15 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
     slug: "",
     grupo: "",
     descuento: "",
+    start_date: "",
+    end_date: "",
   });
   const [loading, setLoading] = useState(false);
   const [uploadedImages, setUploadedImages] = useState([]);
   const [existingImages, setExistingImages] = useState([]);
   const [variantsByBranch, setVariantsByBranch] = useState([]);
   const [enTiendaOnline, setEnTiendaOnline] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     if (product) {
@@ -48,6 +50,8 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
         slug: product.slug || "",
         grupo: product.group || "",
         descuento: product.discount_percentage || "",
+        start_date: product.discount_start_date || "",
+        end_date: product.discount_end_date || "",
       });
       setEnTiendaOnline(product.en_tienda_online !== false);
       setExistingImages(product.images || []);
@@ -89,6 +93,31 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
 
       console.log("✅ Variantes procesadas:", variantsWithWeb);
       setVariantsByBranch(variantsWithWeb);
+
+      // Actualizar fechas de descuento si vienen en los datos
+      if (variantsData && variantsData.length > 0) {
+        const firstBranch = variantsData[0];
+        if (firstBranch.discount_start_date || firstBranch.discount_end_date) {
+          const formatDateForInput = (dateString) => {
+            if (!dateString) return "";
+            // Convertir "2025-12-23T00:00:00" a "2025-12-23T00:00"
+            return dateString.substring(0, 16);
+          };
+
+          setFormData((prev) => ({
+            ...prev,
+            descuento: firstBranch.discount_percentage || prev.descuento,
+            start_date: formatDateForInput(firstBranch.discount_start_date),
+            end_date: formatDateForInput(firstBranch.discount_end_date),
+          }));
+
+          console.log("📅 Fechas de descuento cargadas:", {
+            descuento: firstBranch.discount_percentage,
+            start_date: formatDateForInput(firstBranch.discount_start_date),
+            end_date: formatDateForInput(firstBranch.discount_end_date),
+          });
+        }
+      }
     } catch (error) {
       console.error("Error loading variants:", error);
       toast.error("Error al cargar variantes");
@@ -150,12 +179,30 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
     setVariantsByBranch(updatedVariants);
   };
 
+  const handleRemoveDiscount = () => {
+    setFormData({
+      ...formData,
+      descuento: "",
+      start_date: "",
+      end_date: "",
+    });
+    toast.success("Descuento eliminado");
+  };
+
   const handleUpdateProduct = async () => {
     if (!product) return;
 
     if (!formData.nombre_web || !formData.precio_web) {
       toast.error("El nombre y precio son requeridos");
       return;
+    }
+
+    // Validar que la fecha desde no sea mayor que la fecha hasta
+    if (formData.start_date && formData.end_date) {
+      if (new Date(formData.start_date) > new Date(formData.end_date)) {
+        toast.error("La fecha desde no puede ser mayor que la fecha hasta");
+        return;
+      }
     }
 
     try {
@@ -229,6 +276,18 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
         variantes: variantes, // Incluir las variantes en el payload
       };
 
+      // Solo agregar fechas y affected_products si hay descuento
+      if (formData.descuento && parseFloat(formData.descuento) > 0) {
+        productData.affected_products = 1;
+
+        if (formData.start_date) {
+          productData.discount_start_date = formData.start_date;
+        }
+        if (formData.end_date) {
+          productData.discount_end_date = formData.end_date;
+        }
+      }
+
       console.log(
         "📤 Datos finales a enviar al backend:",
         JSON.stringify(productData, null, 2)
@@ -267,15 +326,11 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
     }
   };
 
-  const handleRemoveFromOnlineStore = async () => {
-    if (
-      !confirm(
-        "¿Está seguro de que desea eliminar este producto de la tienda online?"
-      )
-    ) {
-      return;
-    }
+  const handleRemoveFromOnlineStore = () => {
+    document.getElementById("delete_product_modal").showModal();
+  };
 
+  const confirmRemoveFromOnlineStore = async () => {
     try {
       setLoading(true);
       await toggleProductOnline(product.id, {
@@ -552,7 +607,6 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
                         </span>
                       </label>
                       <div className="relative">
-
                         <label className="input validator">
                           <DollarSign size={16} className="inline-block mr-1" />
                           <input
@@ -638,10 +692,22 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
             {/* Discounts Section */}
             <div className="card bg-base-100 shadow-lg">
               <div className="card-body">
-                <h2 className="card-title text-xl font-semibold mb-4">
-                  <Percent size={20} className="inline-block mr-2" />
-                  Descuentos
-                </h2>
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="card-title text-xl font-semibold">
+                    <Percent size={20} className="inline-block mr-2" />
+                    Descuentos
+                  </h2>
+                  {formData.descuento > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveDiscount}
+                      className="btn btn-sm btn-error btn-outline gap-2"
+                    >
+                      <X size={16} />
+                      Eliminar Descuento
+                    </button>
+                  )}
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="form-control">
                     <label className="label">
@@ -659,7 +725,6 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
                           const value = e.target.value;
 
                           if (value === "" || /^\d*\.?\d*$/.test(value)) {
-
                             const numValue = parseFloat(value);
                             if (
                               value === "" ||
@@ -697,7 +762,94 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
                     </div>
                   )}
                 </div>
+                {/* Campos de fecha para el descuento */}
+                {formData.descuento > 0 && (
+                  <>
+                    {/* Mostrar fechas actuales del descuento */}
+                    {(formData.start_date || formData.end_date) && (
+                      <div className="alert alert-info mt-4">
+                        <Info size={20} />
+                        <div className="flex flex-col gap-1">
+                          <span className="font-semibold">
+                            Vigencia actual del descuento:
+                          </span>
+                          <div className="text-sm">
+                            {formData.start_date && (
+                              <p>
+                                <strong>Desde:</strong>{" "}
+                                {new Date(formData.start_date).toLocaleString(
+                                  "es-AR",
+                                  {
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  }
+                                )}
+                              </p>
+                            )}
+                            {formData.end_date && (
+                              <p>
+                                <strong>Hasta:</strong>{" "}
+                                {new Date(formData.end_date).toLocaleString(
+                                  "es-AR",
+                                  {
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  }
+                                )}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                      <div className="form-control">
+                        <label className="label">
+                          <span className="label-text font-semibold">
+                            Fecha Inicio (opcional)
+                          </span>
+                        </label>
+                        <input
+                          type="datetime-local"
+                          className="input input-bordered"
+                          value={formData.start_date}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              start_date: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+
+                      <div className="form-control">
+                        <label className="label">
+                          <span className="label-text font-semibold">
+                            Fecha Fin (opcional)
+                          </span>
+                        </label>
+                        <input
+                          type="datetime-local"
+                          className="input input-bordered"
+                          value={formData.end_date}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              end_date: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
                 <div className="alert alert-info mt-4">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -870,6 +1022,28 @@ export default function EditProduct({ product, onClose, onProductUpdated }) {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <dialog id="delete_product_modal" className="modal">
+        <div className="modal-box">
+          <h3 className="font-bold text-lg">Confirmar Eliminación</h3>
+          <p className="py-4">
+            ¿Está seguro de que desea eliminar este producto de la tienda
+            online? Esta acción no se puede deshacer.
+          </p>
+          <div className="modal-action">
+            <form method="dialog">
+              <button className="btn btn-ghost mr-2">Cancelar</button>
+              <button
+                className="btn btn-error"
+                onClick={confirmRemoveFromOnlineStore}
+              >
+                Eliminar
+              </button>
+            </form>
+          </div>
+        </div>
+      </dialog>
     </AdminLayout>
   );
 }

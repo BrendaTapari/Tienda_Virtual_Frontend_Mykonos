@@ -9,15 +9,19 @@ import {
   searchProductsByBarcodeAdmin,
   searProductByIdAdmin,
 } from "../services/productService";
+import { fetchGroups } from "../services/groupService";
 import { motion, AnimatePresence } from "motion/react";
 import toast from "react-hot-toast";
-import { Plus, Search, X, BrushCleaning } from "lucide-react";
+import { Plus, Search, X, BrushCleaning, Filter } from "lucide-react";
 
 export default function AdminProductList() {
   const [onlineProducts, setOnlineProducts] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
+  const [groups, setGroups] = useState([]);
   const [searchBarcode, setSearchBarcode] = useState("");
   const [searchOnlineBarcode, setSearchOnlineBarcode] = useState("");
+  const [searchText, setSearchText] = useState("");
+  const [selectedGroupId, setSelectedGroupId] = useState("");
   const [filteredOnlineProducts, setFilteredOnlineProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -36,12 +40,42 @@ export default function AdminProductList() {
 
   useEffect(() => {
     loadOnlineProducts();
+    loadGroups();
   }, []);
+
+  useEffect(() => {
+    // Aplicar filtros cuando cambian el texto de búsqueda o el grupo
+    const timeoutId = setTimeout(() => {
+      loadOnlineProducts();
+    }, 300); // Debounce de 300ms
+
+    return () => clearTimeout(timeoutId);
+  }, [searchText, selectedGroupId]);
+
+  const loadGroups = async () => {
+    try {
+      const groupsData = await fetchGroups();
+      setGroups(groupsData);
+    } catch (error) {
+      console.error("Error loading groups:", error);
+    }
+  };
 
   const loadOnlineProducts = async () => {
     try {
       setLoading(true);
-      const products = await fetchProducts();
+      const filters = {};
+
+      if (searchText.trim()) {
+        filters.search = searchText.trim();
+      }
+      if (selectedGroupId) {
+        filters.group_id = parseInt(selectedGroupId);
+      }
+
+      console.log("🔍 Aplicando filtros:", filters);
+      const products = await fetchProducts(filters);
+      console.log("📦 Productos recibidos:", products.length);
       setOnlineProducts(products);
       setFilteredOnlineProducts(products);
       setError(null);
@@ -136,6 +170,11 @@ export default function AdminProductList() {
     setError(null);
   };
 
+  const handleClearFilters = () => {
+    setSearchText("");
+    setSelectedGroupId("");
+  };
+
   const handleSelectProduct = (product) => {
     setSelectedProduct(product);
     setFormData({
@@ -226,7 +265,6 @@ export default function AdminProductList() {
   const handleProductUpdated = async () => {
     await loadOnlineProducts();
   };
-
 
   if (newProduct) {
     return (
@@ -329,36 +367,44 @@ export default function AdminProductList() {
               </div>
             </div>
 
-            {/* Search filter for online products */}
-            <div className="flex gap-2 mb-4">
-              <input
-                type="text"
-                placeholder="Buscar por código de barras..."
-                className="input input-bordered flex-1"
-                value={searchOnlineBarcode}
-                onChange={(e) => setSearchOnlineBarcode(e.target.value)}
-                onKeyPress={(e) =>
-                  e.key === "Enter" && handleOnlineProductSearch()
-                }
-              />
-              <button
-                className="btn btn-primary"
-                onClick={handleOnlineProductSearch}
-                disabled={searchLoading}
-              >
-                {searchLoading ? (
-                  <span className="loading loading-spinner loading-sm"></span>
-                ) : (
-                  "Buscar"
-                )}
-              </button>
-              {searchOnlineBarcode && (
-                <button
-                  className="btn btn-ghost"
-                  onClick={handleClearOnlineSearch}
+            {/* Advanced Search and Filters */}
+            <div className="space-y-4 mb-4">
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    placeholder="Buscar por nombre, descripción, código o barcode..."
+                    className="input input-bordered w-full"
+                    value={searchText}
+                    onChange={(e) => setSearchText(e.target.value)}
+                  />
+                </div>
+                <select
+                  className="select select-bordered w-64"
+                  value={selectedGroupId}
+                  onChange={(e) => setSelectedGroupId(e.target.value)}
                 >
-                  Limpiar
-                </button>
+                  <option value="">Todos los grupos</option>
+                  {groups.map((group) => (
+                    <option key={group.id} value={group.id}>
+                      {group.group_name}
+                    </option>
+                  ))}
+                </select>
+                {(searchText || selectedGroupId) && (
+                  <button
+                    className="btn btn-ghost gap-2"
+                    onClick={handleClearFilters}
+                  >
+                    <X size={16} />
+                    Limpiar
+                  </button>
+                )}
+              </div>
+              {(searchText || selectedGroupId) && (
+                <div className="text-sm text-base-content/60">
+                  {filteredOnlineProducts.length} producto(s) encontrado(s)
+                </div>
               )}
             </div>
 

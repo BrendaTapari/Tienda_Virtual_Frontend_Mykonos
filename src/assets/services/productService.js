@@ -9,11 +9,60 @@ const API_URL = import.meta.env.VITE_API_URL + "/products";
 
 /**
  * Fetch all products available in online store
+ * @param {Object} filters - Optional filters
+ * @param {string} filters.search - Search text (searches in name, description, provider code, barcode)
+ * @param {number} filters.group_id - Filter by group/category ID
  * @returns {Promise<Array>} Array of online store products
  */
-const fetchProducts = async () => {
+const fetchProducts = async (filters = {}) => {
   try {
-    const response = await axios.get(`${API_URL}`);
+    const params = new URLSearchParams();
+
+    if (filters.search) {
+      params.append("search", filters.search);
+    }
+    if (filters.group_id) {
+      params.append("group_id", filters.group_id);
+    }
+
+    const useFilteredEndpoint = filters.search || filters.group_id;
+    const endpoint = useFilteredEndpoint ? `${API_URL}/all` : API_URL;
+    const url = params.toString()
+      ? `${endpoint}?${params.toString()}`
+      : endpoint;
+
+    console.log("🌐 Llamando a:", url);
+
+    // Si usamos /products/all, necesitamos token de autenticación
+    const config = {};
+    if (useFilteredEndpoint) {
+      const token = getAuthToken();
+      if (token) {
+        config.headers = { Authorization: `Bearer ${token}` };
+      }
+    }
+
+    const response = await axios.get(url, config);
+
+    // Si usamos /products/all, necesitamos normalizar la respuesta para que coincida
+    // con el formato esperado por los componentes
+    if (useFilteredEndpoint && response.data) {
+      return response.data.map((product) => ({
+        id: product.id,
+        nombre_web: product.product_name,
+        descripcion_web: product.description || "",
+        precio_web: product.original_price,
+        images: product.image_url ? [product.image_url] : [],
+        provider: product.provider_name,
+        category: product.group_name,
+        discount_percentage: product.discount_percentage || 0,
+        en_tienda_online: product.en_tienda_online,
+        variantes: [], // /products/all no devuelve variantes, las cargaremos al editar
+        // Agregar campos originales por si se necesitan
+        _original: product,
+      }));
+    }
+
     return response.data;
   } catch (error) {
     console.error("Error fetching products:", error);

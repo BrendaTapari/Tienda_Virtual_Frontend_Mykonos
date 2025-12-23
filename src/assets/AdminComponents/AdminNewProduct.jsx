@@ -6,6 +6,7 @@ import AdminLayout from "./AdminLayout";
 import {
   uploadProductImage,
   toggleProductOnline,
+  updateProductWithVariants,
 } from "../services/productService";
 import { getProductDetailsByVariantByBranch } from "../services/branchService";
 
@@ -16,6 +17,8 @@ export default function AdminNewProduct({ product, onClose, onProductAdded }) {
     precio_web: "",
     slug: "",
     descuento: "",
+    start_date: "",
+    end_date: "",
   });
   const [loading, setLoading] = useState(false);
   const [uploadedImages, setUploadedImages] = useState([]);
@@ -31,12 +34,15 @@ export default function AdminNewProduct({ product, onClose, onProductAdded }) {
         precio_web: product.sale_price || "",
         slug: "",
         descuento: product.discount_percentage || "",
+        start_date: "",
+        end_date: "",
       });
 
       loadVariants();
     }
   }, [product]);
 
+  console.log("Informacion del backedn: ", product);
   const loadVariants = async () => {
     if (!product) return;
 
@@ -107,12 +113,30 @@ export default function AdminNewProduct({ product, onClose, onProductAdded }) {
     setVariantsByBranch(updatedVariants);
   };
 
+  const handleRemoveDiscount = () => {
+    setFormData({
+      ...formData,
+      descuento: "",
+      start_date: "",
+      end_date: "",
+    });
+    toast.success("Descuento eliminado");
+  };
+
   const handleAddProduct = async () => {
     if (!product) return;
 
     if (!formData.nombre_web || !formData.precio_web) {
       toast.error("El nombre y precio son requeridos");
       return;
+    }
+
+    // Validar que la fecha desde no sea mayor que la fecha hasta
+    if (formData.start_date && formData.end_date) {
+      if (new Date(formData.start_date) > new Date(formData.end_date)) {
+        toast.error("La fecha desde no puede ser mayor que la fecha hasta");
+        return;
+      }
     }
 
     try {
@@ -157,18 +181,35 @@ export default function AdminNewProduct({ product, onClose, onProductAdded }) {
 
       const variantes = Array.from(variantesMap.values());
 
-      // 3. Agregar producto a tienda online
-      const productData = {
+      // 3. Activar producto en tienda online primero
+      await toggleProductOnline(product.id, {
         en_tienda_online: enTiendaOnline,
-        nombre_web: formData.nombre_web,
-        descripcion_web: formData.descripcion_web || "",
+      });
+
+      // 4. Actualizar producto con descuentos y variantes
+      const productData = {
+        nombre: formData.nombre_web,
+        descripcion: formData.descripcion_web || "",
         precio_web: parseFloat(formData.precio_web),
-        slug: formData.slug || undefined,
+        en_tienda_online: enTiendaOnline,
         discount_percentage: parseFloat(formData.descuento) || 0,
+        variantes: variantes,
       };
 
-      console.log("📤 Agregando producto a tienda:", productData);
-      await toggleProductOnline(product.id, productData);
+      // Solo agregar fechas y affected_products si hay descuento
+      if (formData.descuento && parseFloat(formData.descuento) > 0) {
+        productData.affected_products = 1;
+
+        if (formData.start_date) {
+          productData.discount_start_date = formData.start_date;
+        }
+        if (formData.end_date) {
+          productData.discount_end_date = formData.end_date;
+        }
+      }
+
+      console.log("📤 Actualizando producto con descuentos:", productData);
+      await updateProductWithVariants(product.id, productData);
 
       toast.success("¡Producto agregado a la tienda online correctamente!");
 
@@ -554,10 +595,22 @@ export default function AdminNewProduct({ product, onClose, onProductAdded }) {
             {/* Discounts Section */}
             <div className="card bg-base-100 shadow-lg">
               <div className="card-body">
-                <h2 className="card-title text-xl font-semibold mb-4">
-                  <Percent size={20} className="inline-block mr-2" />
-                  Descuentos
-                </h2>
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="card-title text-xl font-semibold">
+                    <Percent size={20} className="inline-block mr-2" />
+                    Descuentos
+                  </h2>
+                  {formData.descuento > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveDiscount}
+                      className="btn btn-sm btn-error btn-outline gap-2"
+                    >
+                      <X size={16} />
+                      Eliminar Descuento
+                    </button>
+                  )}
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="form-control">
                     <label className="label">
@@ -611,6 +664,48 @@ export default function AdminNewProduct({ product, onClose, onProductAdded }) {
                     </div>
                   )}
                 </div>
+                {/* Campos de fecha para el descuento */}
+                {formData.descuento > 0 && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div className="form-control">
+                      <label className="label">
+                        <span className="label-text font-semibold">
+                          Fecha Inicio (opcional)
+                        </span>
+                      </label>
+                      <input
+                        type="datetime-local"
+                        className="input input-bordered"
+                        value={formData.start_date}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            start_date: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+
+                    <div className="form-control">
+                      <label className="label">
+                        <span className="label-text font-semibold">
+                          Fecha Fin (opcional)
+                        </span>
+                      </label>
+                      <input
+                        type="datetime-local"
+                        className="input input-bordered"
+                        value={formData.end_date}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            end_date: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+                )}{" "}
               </div>
             </div>
 

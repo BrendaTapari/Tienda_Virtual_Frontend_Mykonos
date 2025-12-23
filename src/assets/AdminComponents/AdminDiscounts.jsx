@@ -19,6 +19,7 @@ export default function AdminDiscounts() {
   const [success, setSuccess] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [discountToDelete, setDiscountToDelete] = useState(null);
+  const [filterStatus, setFilterStatus] = useState("all"); // "all", "active", "inactive"
 
   const [formData, setFormData] = useState({
     type: "group",
@@ -57,6 +58,14 @@ export default function AdminDiscounts() {
     if (!formData.group_id || !formData.discount_percentage) {
       setError("Por favor completa todos los campos requeridos");
       return;
+    }
+
+    // Validar que la fecha desde no sea mayor que la fecha hasta
+    if (formData.start_date && formData.end_date) {
+      if (new Date(formData.start_date) > new Date(formData.end_date)) {
+        setError("La fecha desde no puede ser mayor que la fecha hasta");
+        return;
+      }
     }
 
     try {
@@ -124,6 +133,15 @@ export default function AdminDiscounts() {
       setError("Error al actualizar descuento");
     }
   };
+  console.log("datos del backend: ", discounts);
+
+  // Filtrar descuentos según el estado seleccionado
+  const filteredDiscounts = discounts.filter((discount) => {
+    if (filterStatus === "all") return true;
+    if (filterStatus === "active") return discount.is_active === true;
+    if (filterStatus === "inactive") return discount.is_active === false;
+    return true;
+  });
 
   return (
     <AdminLayout>
@@ -143,6 +161,34 @@ export default function AdminDiscounts() {
           >
             <Plus size={20} />
             Nuevo Descuento
+          </button>
+        </div>
+
+        {/* Filter Tabs */}
+        <div className="flex gap-2 mb-6">
+          <button
+            onClick={() => setFilterStatus("all")}
+            className={`btn btn-sm ${
+              filterStatus === "all" ? "btn-primary" : "btn-ghost"
+            }`}
+          >
+            Todos ({discounts.length})
+          </button>
+          <button
+            onClick={() => setFilterStatus("active")}
+            className={`btn btn-sm ${
+              filterStatus === "active" ? "btn-success" : "btn-ghost"
+            }`}
+          >
+            Activos ({discounts.filter((d) => d.is_active).length})
+          </button>
+          <button
+            onClick={() => setFilterStatus("inactive")}
+            className={`btn btn-sm ${
+              filterStatus === "inactive" ? "btn-error" : "btn-ghost"
+            }`}
+          >
+            Inactivos ({discounts.filter((d) => !d.is_active).length})
           </button>
         </div>
 
@@ -178,21 +224,27 @@ export default function AdminDiscounts() {
               <div className="flex justify-center items-center h-64">
                 <span className="loading loading-spinner loading-lg text-primary"></span>
               </div>
-            ) : discounts.length === 0 ? (
+            ) : filteredDiscounts.length === 0 ? (
               <div className="text-center py-16">
                 <Percent
                   size={48}
                   className="mx-auto text-base-content/20 mb-4"
                 />
                 <p className="text-base-content/60">
-                  No hay descuentos activos
+                  {filterStatus === "all"
+                    ? "No hay descuentos"
+                    : filterStatus === "active"
+                    ? "No hay descuentos activos"
+                    : "No hay descuentos inactivos"}
                 </p>
-                <button
-                  onClick={() => setShowCreateModal(true)}
-                  className="btn btn-primary mt-4"
-                >
-                  Crear Primer Descuento
-                </button>
+                {filterStatus === "all" && (
+                  <button
+                    onClick={() => setShowCreateModal(true)}
+                    className="btn btn-primary mt-4"
+                  >
+                    Crear Primer Descuento
+                  </button>
+                )}
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -210,7 +262,7 @@ export default function AdminDiscounts() {
                     </tr>
                   </thead>
                   <tbody>
-                    {discounts.map((discount) => (
+                    {filteredDiscounts.map((discount) => (
                       <tr key={discount.discount_id}>
                         <td className="font-mono">#{discount.discount_id}</td>
                         <td>

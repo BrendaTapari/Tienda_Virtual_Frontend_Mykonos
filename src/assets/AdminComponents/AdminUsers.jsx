@@ -1,18 +1,36 @@
 import AdminLayout from "./AdminLayout";
 import { useState, useEffect } from "react";
 import { getAllUsers, changeUserRole } from "../services/adminService";
-import { User, Shield, CheckCircle, XCircle, Crown } from "lucide-react";
+import { User, Shield, CheckCircle, XCircle, Crown, Search, X } from "lucide-react";
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
   const [confirmAction, setConfirmAction] = useState(null); // Para controlar el modal de confirmación
 
   useEffect(() => {
     loadUsers();
   }, [filter]);
+
+  useEffect(() => {
+    // Filtrar usuarios por nombre, email o username
+    if (!searchTerm.trim()) {
+      setFilteredUsers(users);
+    } else {
+      const term = searchTerm.toLowerCase();
+      const filtered = users.filter(
+        (user) =>
+          user.username?.toLowerCase().includes(term) ||
+          user.fullname?.toLowerCase().includes(term) ||
+          user.email?.toLowerCase().includes(term)
+      );
+      setFilteredUsers(filtered);
+    }
+  }, [searchTerm, users]);
 
   const loadUsers = async () => {
     try {
@@ -20,6 +38,7 @@ export default function AdminUsers() {
       const roleFilter = filter === "all" ? null : filter;
       const data = await getAllUsers(100, 0, roleFilter);
       setUsers(data);
+      setFilteredUsers(data);
       setError(null);
     } catch (error) {
       console.error("Error loading users:", error);
@@ -115,6 +134,54 @@ export default function AdminUsers() {
           </button>
         </div>
 
+        {/* Search Bar */}
+        <div className="form-control mb-6">
+          <div className="input">
+            <span className="bg-base-200">
+              <Search size={20} />
+            </span>
+            <input
+              type="text"
+              placeholder="Buscar por nombre, usuario o email..."
+              className=" w-full"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            {searchTerm && (
+              <button
+                className="btn btn-square btn-ghost"
+                onClick={() => setSearchTerm("")}
+              >
+                <X size={20} />
+              </button>
+            )}
+          </div>
+          {searchTerm && (
+            <label className="label ">
+              <span className="label-text-alt ml-4">
+                {filteredUsers.length} resultado(s) encontrado(s)
+              </span>
+            </label>
+          )}
+        </div>
+          <button
+            onClick={() => setFilter("customer")}
+            className={`btn btn-sm ${
+              filter === "customer" ? "btn-info" : "btn-ghost"
+            }`}
+          >
+            Clientes
+          </button>
+          <button
+            onClick={() => setFilter("admin")}
+            className={`btn btn-sm ${
+              filter === "admin" ? "btn-warning" : "btn-ghost"
+            }`}
+          >
+            Administradores
+          </button>
+        </div>
+
         {/* Users Table */}
         <div className="card bg-base-100 shadow-lg">
           <div className="card-body">
@@ -122,10 +189,12 @@ export default function AdminUsers() {
               <div className="flex justify-center items-center h-64">
                 <span className="loading loading-spinner loading-lg text-primary"></span>
               </div>
-            ) : users.length === 0 ? (
+            ) : filteredUsers.length === 0 ? (
               <div className="text-center py-16">
                 <p className="text-base-content/60">
-                  No se encontraron usuarios
+                  {searchTerm
+                    ? "No se encontraron usuarios que coincidan con la búsqueda"
+                    : "No se encontraron usuarios"}
                 </p>
               </div>
             ) : (
@@ -144,7 +213,7 @@ export default function AdminUsers() {
                     </tr>
                   </thead>
                   <tbody>
-                    {users.map((user) => (
+                    {filteredUsers.map((user) => (
                       <tr key={user.id}>
                         <td>
                           <div className="flex items-center gap-2">
@@ -245,7 +314,6 @@ export default function AdminUsers() {
             </div>
           </div>
         </dialog>
-      </div>
     </AdminLayout>
   );
 }
