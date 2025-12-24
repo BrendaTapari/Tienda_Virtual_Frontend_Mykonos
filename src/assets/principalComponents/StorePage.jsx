@@ -519,6 +519,18 @@ export default function StorePage() {
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                         />
 
+                        {/* Discount Badge */}
+                        {product.discount_percentage > 0 && (
+                          <div className="absolute top-2 right-2 z-10">
+                            <div className="badge badge-error badge-lg gap-1 shadow-lg">
+                              <span className="text-lg font-bold">
+                                {product.discount_percentage}%
+                              </span>
+                              <span className="text-xs">OFF</span>
+                            </div>
+                          </div>
+                        )}
+
                         {/* Carousel indicators */}
                         {product.images && product.images.length > 1 && (
                           <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-10">
@@ -551,14 +563,38 @@ export default function StorePage() {
                         <h2 className="card-title text-xl font-light text-base-content tracking-wide">
                           {product.nombre_web}
                         </h2>
-                        <p className="text-primary font-light text-lg mb-2">
-                          $
-                          {(
-                            product.precio_web ||
-                            product.sale_price ||
-                            0
-                          ).toFixed(2)}
-                        </p>
+
+                        {/* Price with discount */}
+                        {product.discount_percentage > 0 ? (
+                          <div className="mb-2">
+                            <p className="text-base-content/50 font-light text-sm line-through">
+                              $
+                              {(
+                                product.precio_web ||
+                                product.sale_price ||
+                                0
+                              ).toFixed(2)}
+                            </p>
+                            <p className="text-error font-semibold text-2xl">
+                              $
+                              {(
+                                (product.precio_web ||
+                                  product.sale_price ||
+                                  0) *
+                                (1 - product.discount_percentage / 100)
+                              ).toFixed(2)}
+                            </p>
+                          </div>
+                        ) : (
+                          <p className="text-primary font-light text-lg mb-2">
+                            $
+                            {(
+                              product.precio_web ||
+                              product.sale_price ||
+                              0
+                            ).toFixed(2)}
+                          </p>
+                        )}
 
                         {/* Colors */}
                         {uniqueColors.length > 0 && (
@@ -645,14 +681,46 @@ export default function StorePage() {
               <h3 className="font-bold text-lg">
                 {selectedProduct.nombre_web}
               </h3>
-              <p className="text-primary text-xl font-bold my-4">
-                $
-                {(
-                  selectedProduct.precio_web ||
-                  selectedProduct.sale_price ||
-                  0
-                ).toFixed(2)}
-              </p>
+
+              {/* Price with discount in modal */}
+              {selectedProduct.discount_percentage > 0 ? (
+                <div className="my-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="badge badge-error gap-1">
+                      <span className="font-bold">
+                        {selectedProduct.discount_percentage}%
+                      </span>
+                      <span className="text-xs">OFF</span>
+                    </div>
+                  </div>
+                  <p className="text-base-content/50 text-sm line-through">
+                    $
+                    {(
+                      selectedProduct.precio_web ||
+                      selectedProduct.sale_price ||
+                      0
+                    ).toFixed(2)}
+                  </p>
+                  <p className="text-error text-2xl font-bold">
+                    $
+                    {(
+                      (selectedProduct.precio_web ||
+                        selectedProduct.sale_price ||
+                        0) *
+                      (1 - selectedProduct.discount_percentage / 100)
+                    ).toFixed(2)}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-primary text-xl font-bold my-4">
+                  $
+                  {(
+                    selectedProduct.precio_web ||
+                    selectedProduct.sale_price ||
+                    0
+                  ).toFixed(2)}
+                </p>
+              )}
 
               {/* Color Selection */}
               {getUniqueColors(selectedProduct.variantes).length > 0 && (

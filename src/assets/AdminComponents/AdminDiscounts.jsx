@@ -19,7 +19,7 @@ export default function AdminDiscounts() {
   const [success, setSuccess] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [discountToDelete, setDiscountToDelete] = useState(null);
-  const [filterStatus, setFilterStatus] = useState("all"); // "all", "active", "inactive"
+  const [filterStatus, setFilterStatus] = useState("all"); 
 
   const [formData, setFormData] = useState({
     type: "group",
