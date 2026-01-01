@@ -37,12 +37,10 @@ export default function StorePage() {
 
   const modalRef = useRef(null);
 
-  // Carousel navigation functions
   const nextImage = (product, e) => {
     if (e) e.stopPropagation();
     setCurrentImageIndex((prev) => {
       const nextIdx = prev === product.images.length - 1 ? 0 : prev + 1;
-      // Auto-navigate to the correct thumbnail page
       const newPage = Math.floor(nextIdx / THUMBNAILS_PER_PAGE);
       setThumbnailPage(newPage);
       return nextIdx;
@@ -53,7 +51,6 @@ export default function StorePage() {
     if (e) e.stopPropagation();
     setCurrentImageIndex((prev) => {
       const prevIdx = prev === 0 ? product.images.length - 1 : prev - 1;
-      // Auto-navigate to the correct thumbnail page
       const newPage = Math.floor(prevIdx / THUMBNAILS_PER_PAGE);
       setThumbnailPage(newPage);
       return prevIdx;
@@ -66,7 +63,6 @@ export default function StorePage() {
     setSelectedCard(product);
   };
 
-  // Get paginated thumbnails
   const getPaginatedThumbnails = (images) => {
     const startIdx = thumbnailPage * THUMBNAILS_PER_PAGE;
     const endIdx = startIdx + THUMBNAILS_PER_PAGE;
@@ -80,11 +76,9 @@ export default function StorePage() {
   const canGoToPrevPage = () => thumbnailPage > 0;
   const canGoToNextPage = (images) => thumbnailPage < getTotalPages(images) - 1;
 
-  // Helper function to build image URL
   const getImageUrl = (imagePath) => {
     if (!imagePath) return "https://via.placeholder.com/400x600";
     if (imagePath.startsWith("http")) return imagePath;
-    // Usar VITE_API_URL ya que las imágenes se sirven desde el backend
     const imageBaseUrl =
       import.meta.env.VITE_API_URL || "http://localhost:8000";
     return `${imageBaseUrl}${imagePath}`;
@@ -123,7 +117,7 @@ export default function StorePage() {
                   );
 
                   if (availableVariants.length === 0) {
-                    return null; 
+                    return null;
                   }
 
                   return {
@@ -141,7 +135,7 @@ export default function StorePage() {
                     ),
                   };
                 }
-                return null; 
+                return null;
               } catch (err) {
                 console.error(
                   `Error fetching variants for product ${product.id}:`,
@@ -153,6 +147,49 @@ export default function StorePage() {
           );
 
           data = productsWithBranchStock.filter((p) => p !== null);
+        } else {
+          // When no branch is selected, log the raw data structure
+          console.log(
+            "🔍 Products from backend (no branch):",
+            JSON.stringify(data, null, 2)
+          );
+
+          // When no branch is selected, normalize variant structure
+          data = data.map((product) => {
+            if (product.variantes && product.variantes.length > 0) {
+              console.log(
+                `🔍 BEFORE normalization - Product ${product.id} (${product.nombre_web}):`,
+                JSON.stringify(product.variantes, null, 2)
+              );
+
+              const normalizedVariants = product.variantes.map((v) => {
+                const normalized = {
+                  variant_id: v.variant_id || v.id,
+                  talle: v.talle || v.size,
+                  color: v.color,
+                  color_hex: v.color_hex,
+                  stock: v.stock || v.quantity,
+                };
+                console.log(`🔍 Variant mapping for product ${product.id}:`, {
+                  original: v,
+                  normalized: normalized,
+                  "v.variant_id": v.variant_id,
+                  "v.id": v.id,
+                });
+                return normalized;
+              });
+
+              console.log(
+                `🔍 AFTER normalization - Product ${product.id}:`,
+                normalizedVariants
+              );
+              return {
+                ...product,
+                variantes: normalizedVariants,
+              };
+            }
+            return product;
+          });
         }
 
         setProducts(data);
@@ -220,10 +257,13 @@ export default function StorePage() {
       name: product.nombre_web,
       price: price,
       variants: product.variantes.length,
+      firstVariant: product.variantes[0],
     });
 
     if (product.variantes.length === 1) {
-      addToCartDirectly(product.id, 1, product.variantes[0].variant_id);
+      const variantId = product.variantes[0].variant_id;
+      console.log("Single variant - Using variant_id:", variantId);
+      addToCartDirectly(product.id, 1, variantId);
     } else {
       setSelectedProduct(product);
       setSelectedColor(null);

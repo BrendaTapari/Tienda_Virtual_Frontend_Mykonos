@@ -8,7 +8,7 @@ import UserInfo from "./assets/principalComponents/UserInfo.jsx";
 import Register from "./assets/principalComponents/Register.jsx";
 import Login from "./assets/principalComponents/Login.jsx";
 import ContactUs from "./assets/principalComponents/ContactUs.jsx";
-import Carrito from "./assets/Carrito.jsx";
+import Carrito from "./assets/principalComponents/Carrito.jsx";
 import { Route, Router, useLocation } from "wouter";
 import { AuthProvider } from "./assets/context/AuthContext.jsx";
 import { CartProvider } from "./assets/context/CartContext.jsx";
@@ -36,19 +36,15 @@ function App() {
     location === "/email-verification" || location.startsWith("/admin");
 
   useEffect(() => {
-    // Precargar datos iniciales
     const preloadData = async () => {
       try {
-        // Simular carga mínima para mejor UX
         const minLoadTime = new Promise((resolve) => setTimeout(resolve, 2000));
 
-        // Precargar productos de la tienda
         const productsPromise = fetchProducts().catch((err) => {
           console.error("Error precargando productos:", err);
           return [];
         });
 
-        // Esperar ambas promesas
         await Promise.all([minLoadTime, productsPromise]);
       } catch (error) {
         console.error("Error en precarga:", error);

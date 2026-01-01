@@ -31,8 +31,6 @@ export const getCart = async () => {
   }
 };
 
-
-
 /**
  * Add product to cart
  * @param {number} productId - Product ID
@@ -40,19 +38,30 @@ export const getCart = async () => {
  * @param {number} quantity - Quantity to add
  * @returns {Promise<Object>} Updated cart item
  */
-export const addToCart = async (productId, quantity ,variantId) => {
+export const addToCart = async (productId, quantity, variantId) => {
   try {
     const token = getAuthToken();
     if (!token) throw new Error("Authentication required");
 
-    const response = await axios.post(
-      `${API_URL}/cart/items`,
-      { product_id: productId, quantity: quantity, variant_id: variantId },
-      { headers: { Authorization: `Bearer ${token}` } }
+    const payload = {
+      product_id: productId,
+      quantity: quantity,
+      variant_id: variantId,
+    };
+
+    console.log(
+      "🛒 Adding to cart - Payload being sent to backend:",
+      JSON.stringify(payload, null, 2)
     );
+    console.log("🛒 API URL:", `${API_URL}/cart/items`);
+
+    const response = await axios.post(`${API_URL}/cart/items`, payload, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
     return response.data;
   } catch (error) {
     console.error("Error adding to cart:", error);
+    console.error("Error response from backend:", error.response?.data);
     throw error.response?.data || error;
   }
 };

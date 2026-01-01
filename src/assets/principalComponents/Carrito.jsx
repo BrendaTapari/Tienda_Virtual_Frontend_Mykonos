@@ -1,6 +1,6 @@
 import { useLocation } from "wouter";
-import { useCart } from "./context/CartContext";
-import { useAuth } from "./context/AuthContext";
+import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 import { Trash2, Plus, Minus, ShoppingBag, BrushCleaning } from "lucide-react";
 import { useState } from "react";
 
@@ -72,6 +72,8 @@ export default function Carrito() {
     );
   }
 
+  console.log("Cart data:", cart);
+
   const isEmpty = !cart?.items || cart.items.length === 0;
   const hasCartError = cart?.hasError;
 
@@ -112,7 +114,6 @@ export default function Carrito() {
         )}
 
         {isEmpty ? (
-          /* Empty Cart */
           <div className="card bg-base-100 shadow-xl">
             <div className="card-body text-center py-16">
               <ShoppingBag
@@ -131,9 +132,7 @@ export default function Carrito() {
             </div>
           </div>
         ) : (
-          /* Cart with Items */
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Cart Items */}
             <div className="lg:col-span-2 space-y-4">
               {cart.items.map((item) => (
                 <div
@@ -169,6 +168,36 @@ export default function Carrito() {
                         <h3 className="font-semibold text-lg">
                           {item.product_name}
                         </h3>
+
+                        {/* Variant Info: Color and Size */}
+                        {(item.color_name || item.size_name) && (
+                          <div className="flex gap-2 mt-2 flex-wrap">
+                            {item.color_name && (
+                              <div className="badge badge-outline gap-2">
+                                <span className="text-xs">Color:</span>
+                                {item.color_hex && (
+                                  <div
+                                    className="w-4 h-4 rounded-full border border-base-300"
+                                    style={{ backgroundColor: item.color_hex }}
+                                    title={item.color_name}
+                                  />
+                                )}
+                                <span className="font-medium">
+                                  {item.color_name}
+                                </span>
+                              </div>
+                            )}
+                            {item.size_name && (
+                              <div className="badge badge-outline gap-1">
+                                <span className="text-xs">Talle:</span>
+                                <span className="font-medium">
+                                  {item.size_name}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
                         {item.unit_price ? (
                           <p className="text-primary font-bold mt-1">
                             ${item.unit_price?.toLocaleString("es-AR")}

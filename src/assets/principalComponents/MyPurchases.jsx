@@ -13,13 +13,11 @@ export default function MyPurchases() {
   const [selectedPurchase, setSelectedPurchase] = useState(null);
 
   useEffect(() => {
-    // Redirect to login if not authenticated
     if (!isAuthenticated) {
       setLocation("/login");
       return;
     }
 
-    // Fetch purchases
     const fetchPurchases = async () => {
       try {
         setIsLoading(true);

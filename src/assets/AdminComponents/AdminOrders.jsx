@@ -85,10 +85,10 @@ export default function AdminOrders() {
   return (
     <AdminLayout>
       <div>
-        <h1 className="text-4xl font-bold mb-2 tracking-wide">
-          Gestión de Órdenes
+        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-2 tracking-wide">
+          Gestión de Pedidos
         </h1>
-        <p className="text-base-content/60 mb-8">
+        <p className="text-base-content/60 mb-4 md:mb-6 lg:mb-8 text-sm md:text-base">
           Administrar órdenes y envíos
         </p>
 
@@ -106,10 +106,10 @@ export default function AdminOrders() {
         )}
 
         {/* Filters */}
-        <div className="flex gap-2 mb-6 flex-wrap">
+        <div className="flex gap-2 mb-4 md:mb-6 flex-wrap">
           <button
             onClick={() => setFilter("all")}
-            className={`btn btn-sm ${
+            className={`btn btn-xs md:btn-sm ${
               filter === "all" ? "btn-primary" : "btn-ghost"
             }`}
           >
@@ -117,7 +117,7 @@ export default function AdminOrders() {
           </button>
           <button
             onClick={() => setFilter("pending")}
-            className={`btn btn-sm ${
+            className={`btn btn-xs md:btn-sm ${
               filter === "pending" ? "btn-warning" : "btn-ghost"
             }`}
           >
@@ -125,7 +125,7 @@ export default function AdminOrders() {
           </button>
           <button
             onClick={() => setFilter("processing")}
-            className={`btn btn-sm ${
+            className={`btn btn-xs md:btn-sm ${
               filter === "processing" ? "btn-info" : "btn-ghost"
             }`}
           >
@@ -133,7 +133,7 @@ export default function AdminOrders() {
           </button>
           <button
             onClick={() => setFilter("shipped")}
-            className={`btn btn-sm ${
+            className={`btn btn-xs md:btn-sm ${
               filter === "shipped" ? "btn-primary" : "btn-ghost"
             }`}
           >
@@ -141,7 +141,7 @@ export default function AdminOrders() {
           </button>
           <button
             onClick={() => setFilter("delivered")}
-            className={`btn btn-sm ${
+            className={`btn btn-xs md:btn-sm ${
               filter === "delivered" ? "btn-success" : "btn-ghost"
             }`}
           >
@@ -151,7 +151,7 @@ export default function AdminOrders() {
 
         {/* Orders Table */}
         <div className="card bg-base-100 shadow-lg">
-          <div className="card-body">
+          <div className="card-body p-2 md:p-4 lg:p-6">
             {loading ? (
               <div className="flex justify-center items-center h-64">
                 <span className="loading loading-spinner loading-lg text-primary"></span>
@@ -163,14 +163,14 @@ export default function AdminOrders() {
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="table table-zebra">
+              <div className="overflow-x-auto w-full">
+                <table className="table table-zebra table-xs md:table-sm lg:table-md">
                   <thead>
                     <tr>
-                      <th>ID</th>
+                      <th className="hidden md:table-cell">ID</th>
                       <th>Cliente</th>
-                      <th>Fecha</th>
-                      <th>Items</th>
+                      <th className="hidden lg:table-cell">Fecha</th>
+                      <th className="hidden md:table-cell">Items</th>
                       <th>Total</th>
                       <th>Estado</th>
                       <th>Acciones</th>
@@ -179,35 +179,36 @@ export default function AdminOrders() {
                   <tbody>
                     {orders.map((order) => (
                       <tr key={order.order_id}>
-                        <td className="font-mono">#{order.order_id}</td>
+                        <td className="font-mono hidden md:table-cell">#{order.order_id}</td>
                         <td>
                           <div>
-                            <p className="font-medium">
+                            <p className="font-medium text-xs md:text-sm">
                               {order.customer?.username}
                             </p>
-                            <p className="text-sm text-base-content/60">
+                            <p className="text-xs text-base-content/60 hidden md:block">
                               {order.customer?.email}
                             </p>
                           </div>
                         </td>
-                        <td className="text-sm">
+                        <td className="text-xs md:text-sm hidden lg:table-cell">
                           {order.order_date
                             ? new Date(order.order_date).toLocaleDateString(
                                 "es-AR"
                               )
                             : "N/A"}
                         </td>
-                        <td className="text-center">{order.items_count}</td>
-                        <td className="font-semibold">
+                        <td className="text-center hidden md:table-cell">{order.items_count}</td>
+                        <td className="font-semibold text-xs md:text-sm">
                           ${order.total?.toLocaleString("es-AR")}
                         </td>
                         <td>{getStatusBadge(order.status)}</td>
                         <td>
                           <button
                             onClick={() => handleViewDetails(order.order_id)}
-                            className="btn btn-sm btn-primary"
+                            className="btn btn-xs md:btn-sm btn-primary"
                           >
-                            Ver Detalles
+                            <span className="hidden md:inline">Ver Detalles</span>
+                            <span className="md:hidden">Ver</span>
                           </button>
                         </td>
                       </tr>
@@ -235,16 +236,16 @@ export default function AdminOrders() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                className="fixed inset-0 flex items-center justify-center z-50 p-8"
+                className="fixed inset-0 flex items-center justify-center z-50 p-4 md:p-8"
               >
                 <div className="card bg-base-100 w-full max-w-4xl shadow-2xl max-h-[90vh] overflow-y-auto">
-                  <div className="card-body">
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h2 className="card-title text-2xl">
+                  <div className="card-body p-4 md:p-6">
+                    <div className="flex justify-between items-start gap-2 mb-4">
+                      <div className="flex-1 min-w-0">
+                        <h2 className="card-title text-lg md:text-2xl">
                           Orden #{selectedOrder.order_id}
                         </h2>
-                        <p className="text-sm text-base-content/60">
+                        <p className="text-xs md:text-sm text-base-content/60">
                           {selectedOrder.order_date
                             ? new Date(selectedOrder.order_date).toLocaleString(
                                 "es-AR"
@@ -254,23 +255,23 @@ export default function AdminOrders() {
                       </div>
                       <button
                         onClick={() => setShowDetailsModal(false)}
-                        className="btn btn-sm btn-circle btn-ghost"
+                        className="btn btn-sm btn-circle btn-ghost flex-shrink-0"
                       >
                         ✕
                       </button>
                     </div>
 
                     {/* Customer Info */}
-                    <div className="bg-base-200 p-4 rounded-lg mb-4">
-                      <h3 className="font-bold mb-2">Cliente</h3>
-                      <p>
+                    <div className="bg-base-200 p-3 md:p-4 rounded-lg mb-4">
+                      <h3 className="font-bold text-sm md:text-base mb-2">Cliente</h3>
+                      <p className="text-xs md:text-sm">
                         <strong>Nombre:</strong>{" "}
                         {selectedOrder.customer?.username}
                       </p>
-                      <p>
+                      <p className="text-xs md:text-sm">
                         <strong>Email:</strong> {selectedOrder.customer?.email}
                       </p>
-                      <p>
+                      <p className="text-xs md:text-sm">
                         <strong>Dirección:</strong>{" "}
                         {selectedOrder.shipping_address || "No especificada"}
                       </p>
@@ -278,9 +279,9 @@ export default function AdminOrders() {
 
                     {/* Items */}
                     <div className="mb-4">
-                      <h3 className="font-bold mb-2">Productos</h3>
+                      <h3 className="font-bold text-sm md:text-base mb-2">Productos</h3>
                       <div className="overflow-x-auto">
-                        <table className="table table-sm">
+                        <table className="table table-xs md:table-sm">
                           <thead>
                             <tr>
                               <th>Producto</th>
@@ -308,14 +309,14 @@ export default function AdminOrders() {
                     </div>
 
                     {/* Totals */}
-                    <div className="bg-base-200 p-4 rounded-lg mb-4">
-                      <div className="flex justify-between mb-2">
+                    <div className="bg-base-200 p-3 md:p-4 rounded-lg mb-4">
+                      <div className="flex justify-between mb-2 text-xs md:text-sm">
                         <span>Subtotal:</span>
                         <span>
                           ${selectedOrder.subtotal?.toLocaleString("es-AR")}
                         </span>
                       </div>
-                      <div className="flex justify-between mb-2">
+                      <div className="flex justify-between mb-2 text-xs md:text-sm">
                         <span>Envío:</span>
                         <span>
                           $
@@ -325,7 +326,7 @@ export default function AdminOrders() {
                         </span>
                       </div>
                       <div className="divider my-2"></div>
-                      <div className="flex justify-between text-lg font-bold">
+                      <div className="flex justify-between text-base md:text-lg font-bold">
                         <span>Total:</span>
                         <span>
                           ${selectedOrder.total?.toLocaleString("es-AR")}
@@ -335,7 +336,7 @@ export default function AdminOrders() {
 
                     {/* Status Update */}
                     <div className="mb-4">
-                      <h3 className="font-bold mb-2">Actualizar Estado</h3>
+                      <h3 className="font-bold text-sm md:text-base mb-2">Actualizar Estado</h3>
                       <div className="flex gap-2 flex-wrap">
                         <button
                           onClick={() =>

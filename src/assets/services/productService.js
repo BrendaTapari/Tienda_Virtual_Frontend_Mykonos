@@ -44,6 +44,8 @@ const fetchProducts = async (filters = {}) => {
 
     const response = await axios.get(url, config);
 
+    console.log("🔍 Raw backend response from", url, ":", response.data);
+
     // Si usamos /products/all, necesitamos normalizar la respuesta para que coincida
     // con el formato esperado por los componentes
     if (useFilteredEndpoint && response.data) {

@@ -128,7 +128,6 @@ export default function AdminProductList() {
     }
   };
 
-  // Filter online products by barcode
   const handleOnlineProductSearch = async () => {
     if (!searchOnlineBarcode.trim()) {
       setFilteredOnlineProducts(onlineProducts);
@@ -276,7 +275,6 @@ export default function AdminProductList() {
     );
   }
 
-  // Si hay un producto siendo editado, mostrar la página de edición
   if (editingProduct) {
     return (
       <EditProduct
@@ -290,10 +288,10 @@ export default function AdminProductList() {
   return (
     <AdminLayout>
       <div>
-        <h1 className="text-4xl font-bold mb-2 tracking-wide">
+        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-2 tracking-wide">
           Gestor de productos
         </h1>
-        <p className="text-base-content/60 mb-8">
+        <p className="text-base-content/60 mb-4 md:mb-6 lg:mb-8 text-sm md:text-base">
           Gestiona los productos en la tienda online
         </p>
 
@@ -324,31 +322,34 @@ export default function AdminProductList() {
         )}
 
         {/* Add Product Section */}
-        <div className="card bg-base-100 shadow-lg mb-8">
-          <div className="card-body">
-            <h2 className="card-title text-primary">
+        <div className="card bg-base-100 shadow-lg mb-6 md:mb-8">
+          <div className="card-body p-4 md:p-6">
+            <h2 className="card-title text-primary text-base md:text-lg">
               Agregar productos en la tienda virtual{" "}
             </h2>
-            <p className="text-sm text-base-content/60 mb-4"></p>
+            <p className="text-xs md:text-sm text-base-content/60 mb-4"></p>
 
-            <div className="flex gap-4">
+            <div className="flex flex-col md:flex-row gap-2 md:gap-4">
               <input
                 type="text"
                 placeholder="Ingresa el código de barras del producto"
-                className="input input-bordered flex-1"
+                className="input input-bordered input-sm md:input-md flex-1"
                 value={searchBarcode}
                 onChange={(e) => setSearchBarcode(e.target.value)}
                 onKeyPress={(e) => e.key === "Enter" && handleBarcodeSearch()}
               />
               <button
-                className="btn btn-primary"
+                className="btn btn-primary btn-sm md:btn-md"
                 onClick={handleBarcodeSearch}
                 disabled={searchLoading}
               >
                 {searchLoading ? (
                   <span className="loading loading-spinner loading-sm"></span>
                 ) : (
-                  <Search className=" h-4 w-4" />
+                  <>
+                    <Search className="h-4 w-4" />
+                    <span className="md:inline hidden">Buscar</span>
+                  </>
                 )}
               </button>
             </div>
@@ -357,30 +358,30 @@ export default function AdminProductList() {
 
         {/* Online Products List */}
         <div className="card bg-base-100 shadow-lg">
-          <div className="card-body">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="card-title text-primary">
+          <div className="card-body p-4 md:p-6">
+            <div className="flex flex-col md:flex-row justify-between md:items-center gap-2 md:gap-0 mb-4">
+              <h2 className="card-title text-primary text-base md:text-lg">
                 Productos en la tienda online:
               </h2>
-              <div className="badge badge-info badge-sm">
-                Doble clic en cualquier fila para editar
+              <div className="badge badge-info badge-sm text-xs">
+                Doble clic para editar
               </div>
             </div>
 
             {/* Advanced Search and Filters */}
             <div className="space-y-4 mb-4">
-              <div className="flex gap-2">
+              <div className="flex flex-col md:flex-row gap-2">
                 <div className="flex-1">
                   <input
                     type="text"
                     placeholder="Buscar por nombre, descripción, código o barcode..."
-                    className="input input-bordered w-full"
+                    className="input input-bordered input-sm md:input-md w-full"
                     value={searchText}
                     onChange={(e) => setSearchText(e.target.value)}
                   />
                 </div>
                 <select
-                  className="select select-bordered w-64"
+                  className="select select-bordered select-sm md:select-md w-full md:w-64"
                   value={selectedGroupId}
                   onChange={(e) => setSelectedGroupId(e.target.value)}
                 >
@@ -393,11 +394,11 @@ export default function AdminProductList() {
                 </select>
                 {(searchText || selectedGroupId) && (
                   <button
-                    className="btn btn-ghost gap-2"
+                    className="btn btn-ghost btn-sm md:btn-md gap-2"
                     onClick={handleClearFilters}
                   >
                     <X size={16} />
-                    Limpiar
+                    <span className="hidden md:inline">Limpiar</span>
                   </button>
                 )}
               </div>
@@ -421,18 +422,18 @@ export default function AdminProductList() {
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="table table-zebra">
+              <div className="overflow-x-auto w-full">
+                <table className="table table-zebra table-xs md:table-sm lg:table-md">
                   <thead>
                     <tr>
-                      <th>#</th>
-                      <th>Imagen</th>
+                      <th className="hidden lg:table-cell">#</th>
+                      <th className="hidden md:table-cell">Imagen</th>
                       <th>Nombre</th>
-                      <th>Proveedor</th>
-                      <th>Categoría</th>
-                      <th>Precio original web</th>
-                      <th>Descuento</th>
-                      <th>Precio final web</th>
+                      <th className="hidden lg:table-cell">Proveedor</th>
+                      <th className="hidden lg:table-cell">Categoría</th>
+                      <th className="hidden md:table-cell">Precio original</th>
+                      <th className="hidden md:table-cell">Descuento</th>
+                      <th>Precio final</th>
                       <th>Stock</th>
                       <th>Acciones</th>
                     </tr>
@@ -454,11 +455,11 @@ export default function AdminProductList() {
                           className="cursor-pointer hover:bg-base-200 transition-colors"
                           title="Double click to edit"
                         >
-                          <td>{product.id}</td>
-                          <td>
+                          <td className="hidden lg:table-cell">{product.id}</td>
+                          <td className="hidden md:table-cell">
                             {product.images && product.images.length > 0 ? (
                               <div className="avatar">
-                                <div className="w-12 h-12 rounded">
+                                <div className="w-10 h-10 md:w-12 md:h-12 rounded">
                                   <img
                                     src={`${
                                       import.meta.env.VITE_API_URL ||
@@ -470,29 +471,29 @@ export default function AdminProductList() {
                                 </div>
                               </div>
                             ) : (
-                              <div className="w-12 h-12 bg-base-300 rounded flex items-center justify-center">
+                              <div className="w-10 h-10 md:w-12 md:h-12 bg-base-300 rounded flex items-center justify-center">
                                 <span className="text-xs">Sin imagen</span>
                               </div>
                             )}
                           </td>
-                          <td className="font-medium">{product.nombre_web}</td>
-                          <td className="text-sm">{product.provider || "-"}</td>
-                          <td className="text-sm">{product.category || "-"}</td>
-                          <td className="font-semibold text-primary">
+                          <td className="font-medium text-xs md:text-sm">{product.nombre_web}</td>
+                          <td className="text-xs md:text-sm hidden lg:table-cell">{product.provider || "-"}</td>
+                          <td className="text-xs md:text-sm hidden lg:table-cell">{product.category || "-"}</td>
+                          <td className="font-semibold text-primary text-xs md:text-sm hidden md:table-cell">
                             ${(product.precio_web || 0).toLocaleString("es-AR")}
                           </td>
-                          <td>
+                          <td className="hidden md:table-cell">
                             {product.discount_percentage ? (
                               <div className="flex flex-wrap gap-1">
-                                <span className="badge badge-info badge-sm">
+                                <span className="badge badge-info badge-xs md:badge-sm">
                                   {product.discount_percentage}% off
                                 </span>
                               </div>
                             ) : (
-                              <span className="text-base-content/40">0%</span>
+                              <span className="text-base-content/40 text-xs">0%</span>
                             )}
                           </td>
-                          <td className="font-bold text-accent">
+                          <td className="font-bold text-accent text-xs md:text-sm">
                             $
                             {(
                               product.precio_web *
@@ -503,18 +504,18 @@ export default function AdminProductList() {
                           <td>
                             <div className="flex flex-col gap-1">
                               <span
-                                className={`badge badge-sm ${
+                                className={`badge badge-xs md:badge-sm ${
                                   stockTotal > 0
                                     ? "badge-success"
                                     : "badge-error"
                                 }`}
                               >
-                                {stockTotal} unidades
+                                {stockTotal} u
                               </span>
                               {product.variantes &&
                                 product.variantes.length > 1 && (
-                                  <span className="text-xs text-base-content/60">
-                                    {product.variantes.length} variantes
+                                  <span className="text-xs text-base-content/60 hidden md:inline">
+                                    {product.variantes.length} var.
                                   </span>
                                 )}
                             </div>
@@ -522,13 +523,13 @@ export default function AdminProductList() {
 
                           <td>
                             <button
-                              className="btn btn-sm btn-error btn-outline"
+                              className="btn btn-xs md:btn-sm btn-error btn-outline"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleRemoveFromOnlineStore(product.id);
                               }}
                             >
-                              <BrushCleaning className=" h-4 w-4" />
+                              <BrushCleaning className="h-3 w-3 md:h-4 md:w-4" />
                             </button>
                           </td>
                         </tr>
@@ -560,10 +561,10 @@ export default function AdminProductList() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                className="fixed inset-0 flex items-center justify-center z-50 p-8"
+                className="fixed inset-0 flex items-center justify-center z-50 p-4 md:p-8"
               >
                 <div className="card bg-base-100 w-full max-w-4xl shadow-2xl max-h-[90vh] overflow-y-auto">
-                  <div className="card-body">
+                  <div className="card-body p-4 md:p-6">
                     <div className="flex justify-between items-center mb-4">
                       <h2 className="card-title text-2xl">
                         Resultados de búsqueda
@@ -585,10 +586,10 @@ export default function AdminProductList() {
                         {allProducts.map((product) => (
                           <div
                             key={product.id}
-                            className="card card-side bg-base-200 shadow-md hover:shadow-xl transition-all"
+                            className="card card-side bg-base-200 shadow-md hover:shadow-xl transition-all flex-col md:flex-row"
                           >
                             {/* Imagen del producto a la izquierda */}
-                            <figure className="w-64 flex-shrink-0">
+                            <figure className="w-full md:w-64 h-48 md:h-auto flex-shrink-0">
                               {product.image_url ? (
                                 <img
                                   src={`${
@@ -644,7 +645,7 @@ export default function AdminProductList() {
                                 </p>
                               )}
 
-                              <div className="grid grid-cols-3 gap-4 text-sm mb-2">
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4 text-sm mb-2">
                                 <div>
                                   <p className="text-base-content/60">
                                     Código:

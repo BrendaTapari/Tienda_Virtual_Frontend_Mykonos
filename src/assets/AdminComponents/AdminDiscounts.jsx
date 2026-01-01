@@ -19,7 +19,7 @@ export default function AdminDiscounts() {
   const [success, setSuccess] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [discountToDelete, setDiscountToDelete] = useState(null);
-  const [filterStatus, setFilterStatus] = useState("all"); 
+  const [filterStatus, setFilterStatus] = useState("all");
 
   const [formData, setFormData] = useState({
     type: "group",
@@ -146,18 +146,18 @@ export default function AdminDiscounts() {
   return (
     <AdminLayout>
       <div>
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6 md:mb-8">
           <div>
-            <h1 className="text-4xl font-bold mb-2 tracking-wide">
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-2 tracking-wide">
               Gestión de Descuentos
             </h1>
-            <p className="text-base-content/60">
+            <p className="text-base-content/60 text-sm md:text-base">
               Administrar descuentos por grupos de productos
             </p>
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="btn btn-primary gap-2"
+            className="btn btn-primary btn-sm md:btn-md gap-2 w-full md:w-auto"
           >
             <Plus size={20} />
             Nuevo Descuento
@@ -165,10 +165,10 @@ export default function AdminDiscounts() {
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex gap-2 mb-6">
+        <div className="flex gap-2 mb-4 md:mb-6 flex-wrap">
           <button
             onClick={() => setFilterStatus("all")}
-            className={`btn btn-sm ${
+            className={`btn btn-xs md:btn-sm ${
               filterStatus === "all" ? "btn-primary" : "btn-ghost"
             }`}
           >
@@ -176,7 +176,7 @@ export default function AdminDiscounts() {
           </button>
           <button
             onClick={() => setFilterStatus("active")}
-            className={`btn btn-sm ${
+            className={`btn btn-xs md:btn-sm ${
               filterStatus === "active" ? "btn-success" : "btn-ghost"
             }`}
           >
@@ -184,7 +184,7 @@ export default function AdminDiscounts() {
           </button>
           <button
             onClick={() => setFilterStatus("inactive")}
-            className={`btn btn-sm ${
+            className={`btn btn-xs md:btn-sm ${
               filterStatus === "inactive" ? "btn-error" : "btn-ghost"
             }`}
           >
@@ -219,7 +219,7 @@ export default function AdminDiscounts() {
 
         {/* Discounts Table */}
         <div className="card bg-base-100 shadow-lg">
-          <div className="card-body">
+          <div className="card-body p-2 md:p-4 lg:p-6">
             {loading ? (
               <div className="flex justify-center items-center h-64">
                 <span className="loading loading-spinner loading-lg text-primary"></span>
@@ -247,16 +247,16 @@ export default function AdminDiscounts() {
                 )}
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="table table-zebra">
+              <div className="overflow-x-auto w-full">
+                <table className="table table-zebra table-xs md:table-sm lg:table-md">
                   <thead>
                     <tr>
-                      <th>ID</th>
-                      <th>Tipo</th>
+                      <th className="hidden md:table-cell">ID</th>
+                      <th className="hidden lg:table-cell">Tipo</th>
                       <th>Objetivo</th>
                       <th>Descuento</th>
-                      <th>Productos Afectados</th>
-                      <th>Vigencia</th>
+                      <th className="hidden lg:table-cell">Productos Afectados</th>
+                      <th className="hidden md:table-cell">Vigencia</th>
                       <th>Estado</th>
                       <th>Acciones</th>
                     </tr>
@@ -264,23 +264,23 @@ export default function AdminDiscounts() {
                   <tbody>
                     {filteredDiscounts.map((discount) => (
                       <tr key={discount.discount_id}>
-                        <td className="font-mono">#{discount.discount_id}</td>
-                        <td>
-                          <span className="badge badge-info">
+                        <td className="font-mono hidden md:table-cell">#{discount.discount_id}</td>
+                        <td className="hidden lg:table-cell">
+                          <span className="badge badge-info badge-sm">
                             {discount.type === "group" ? "Grupo" : "Producto"}
                           </span>
                         </td>
                         <td className="font-medium">{discount.target_name}</td>
                         <td>
-                          <span className="badge badge-success gap-1">
-                            <Percent size={14} />
+                          <span className="badge badge-success badge-sm gap-1">
+                            <Percent size={12} className="md:w-3.5 md:h-3.5" />
                             {discount.discount_percentage}%
                           </span>
                         </td>
-                        <td className="text-center">
+                        <td className="text-center hidden lg:table-cell">
                           {discount.affected_products}
                         </td>
-                        <td className="text-sm">
+                        <td className="text-xs md:text-sm hidden md:table-cell">
                           {discount.start_date && (
                             <div>
                               Desde:{" "}
@@ -303,10 +303,10 @@ export default function AdminDiscounts() {
                         </td>
                         <td>
                           <div className="form-control">
-                            <label className="label cursor-pointer gap-2">
+                            <label className="label cursor-pointer gap-1 md:gap-2 justify-start">
                               <input
                                 type="checkbox"
-                                className="toggle toggle-success"
+                                className="toggle toggle-success toggle-xs md:toggle-sm"
                                 checked={discount.is_active}
                                 onChange={() =>
                                   handleToggleDiscount(
@@ -315,7 +315,7 @@ export default function AdminDiscounts() {
                                   )
                                 }
                               />
-                              <span className="label-text">
+                              <span className="label-text text-xs md:text-sm">
                                 {discount.is_active ? "Activo" : "Inactivo"}
                               </span>
                             </label>
@@ -326,10 +326,10 @@ export default function AdminDiscounts() {
                             onClick={() =>
                               handleDeleteDiscount(discount.discount_id)
                             }
-                            className="btn btn-sm btn-error btn-outline gap-1"
+                            className="btn btn-xs md:btn-sm btn-error btn-outline gap-1"
                           >
-                            <Trash2 size={14} />
-                            Eliminar
+                            <Trash2 size={12} className="md:w-3.5 md:h-3.5" />
+                            <span className="hidden md:inline">Eliminar</span>
                           </button>
                         </td>
                       </tr>
@@ -357,10 +357,10 @@ export default function AdminDiscounts() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                className="fixed inset-0 flex items-center justify-center z-50 p-8"
+                className="fixed inset-0 flex items-center justify-center z-50 p-4 md:p-8"
               >
-                <div className="card bg-base-100 w-full max-w-2xl shadow-2xl">
-                  <div className="card-body">
+                <div className="card bg-base-100 w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
+                  <div className="card-body p-4 md:p-6">
                     <h2 className="card-title text-2xl mb-4">
                       Crear Nuevo Descuento
                     </h2>
@@ -416,7 +416,7 @@ export default function AdminDiscounts() {
                         />
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="form-control">
                           <label className="label">
                             <span className="label-text">

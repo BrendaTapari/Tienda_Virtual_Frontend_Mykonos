@@ -243,44 +243,46 @@ export default function AdminNewProduct({ product, onClose, onProductAdded }) {
       <div className="max-w-7xl mx-auto">
         {/* Header - Sticky */}
         <div className="sticky top-0 z-50 bg-base-100 pb-4 pt-2 -mx-4 px-4 shadow-md mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center gap-2 md:gap-4">
               <button
                 onClick={handleClose}
-                className="btn btn-ghost btn-circle"
+                className="btn btn-ghost btn-sm md:btn-md btn-circle"
                 title="Volver"
               >
-                <ArrowLeft size={24} />
+                <ArrowLeft size={20} className="md:w-6 md:h-6" />
               </button>
               <div>
-                <h1 className="text-3xl font-bold">Agregar Producto</h1>
-                <p className="text-base-content/60 text-sm">
+                <h1 className="text-xl md:text-2xl lg:text-3xl font-bold">Agregar Producto</h1>
+                <p className="text-base-content/60 text-xs md:text-sm">
                   Configura el producto para la tienda online
                 </p>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 w-full md:w-auto">
               <button
-                className="btn btn-ghost"
+                className="btn btn-ghost btn-sm md:btn-md flex-1 md:flex-none"
                 onClick={handleClose}
                 disabled={loading}
               >
                 Cancelar
               </button>
               <button
-                className="btn btn-success flex items-center gap-2"
+                className="btn btn-success btn-sm md:btn-md flex items-center gap-2 flex-1 md:flex-none"
                 onClick={handleAddProduct}
                 disabled={loading}
               >
                 {loading ? (
                   <>
                     <span className="loading loading-spinner loading-sm"></span>
-                    Guardando...
+                    <span className="hidden md:inline">Guardando...</span>
+                    <span className="md:hidden">Guardar</span>
                   </>
                 ) : (
                   <>
                     <Save size={18} />
-                    Agregar a tienda
+                    <span className="hidden md:inline">Agregar a tienda</span>
+                    <span className="md:hidden">Agregar</span>
                   </>
                 )}
               </button>
@@ -293,46 +295,46 @@ export default function AdminNewProduct({ product, onClose, onProductAdded }) {
           <div className="lg:col-span-1 space-y-6">
             {/* Información de referencia del producto */}
             <div className="card bg-info/10 border border-info shadow-lg">
-              <div className="card-body p-4">
-                <h3 className="font-bold text-sm flex items-center gap-2 mb-3">
-                  <Info size={16} />
+              <div className="card-body p-3 md:p-4">
+                <h3 className="font-bold text-xs md:text-sm flex items-center gap-2 mb-3">
+                  <Info size={14} className="md:w-4 md:h-4" />
                   Datos de la Tienda Física
                 </h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-base-content/60">Nombre:</span>
-                    <span className="font-semibold text-right max-w-[60%]">
+                <div className="space-y-2 text-xs md:text-sm">
+                  <div className="flex justify-between gap-2">
+                    <span className="text-base-content/60 flex-shrink-0">Nombre:</span>
+                    <span className="font-semibold text-right break-words">
                       {product?.product_name || "-"}
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-base-content/60">Grupo:</span>
-                    <span className="font-semibold">
+                  <div className="flex justify-between gap-2">
+                    <span className="text-base-content/60 flex-shrink-0">Grupo:</span>
+                    <span className="font-semibold text-right break-words">
                       {product?.group_name || "-"}
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-base-content/60">Proveedor:</span>
-                    <span className="font-semibold">
+                  <div className="flex justify-between gap-2">
+                    <span className="text-base-content/60 flex-shrink-0">Proveedor:</span>
+                    <span className="font-semibold text-right break-words">
                       {product?.provider_name || "-"}
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-base-content/60">Código:</span>
-                    <span className="font-mono text-xs">
+                  <div className="flex justify-between gap-2">
+                    <span className="text-base-content/60 flex-shrink-0">Código:</span>
+                    <span className="font-mono text-xs break-all">
                       {product?.provider_code || "-"}
                     </span>
                   </div>
                   <div className="divider my-2"></div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-base-content/60">Precio tienda:</span>
-                    <span className="font-bold text-lg text-primary">
+                  <div className="flex justify-between items-center gap-2">
+                    <span className="text-base-content/60 flex-shrink-0">Precio tienda:</span>
+                    <span className="font-bold text-base md:text-lg text-primary">
                       ${product?.sale_price?.toLocaleString("es-AR") || "0"}
                     </span>
                   </div>
                   {product?.discount_percentage > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-base-content/60">Descuento:</span>
+                    <div className="flex justify-between gap-2">
+                      <span className="text-base-content/60 flex-shrink-0">Descuento:</span>
                       <span className="badge badge-warning badge-sm">
                         {product.discount_percentage}% OFF
                       </span>
@@ -340,7 +342,7 @@ export default function AdminNewProduct({ product, onClose, onProductAdded }) {
                   )}
                 </div>
                 <div className="alert alert-info mt-3 p-2">
-                  <Info size={14} />
+                  <Info size={12} className="md:w-3.5 md:h-3.5 flex-shrink-0" />
                   <span className="text-xs">
                     Estos son los datos actuales en la tienda física. Úsalos
                     como referencia.
@@ -352,14 +354,14 @@ export default function AdminNewProduct({ product, onClose, onProductAdded }) {
             {/* Imagen existente del producto */}
             {product.image_url && (
               <div className="card bg-base-100 shadow-lg">
-                <div className="card-body">
-                  <h2 className="card-title text-lg">Imagen actual</h2>
+                <div className="card-body p-3 md:p-6">
+                  <h2 className="card-title text-base md:text-lg">Imagen actual</h2>
                   <img
                     src={`${
                       import.meta.env.VITE_API_URL || "http://localhost:8000"
                     }${product.image_url}`}
                     alt={product.product_name}
-                    className="w-full h-64 object-cover rounded-lg"
+                    className="w-full h-48 md:h-64 object-cover rounded-lg"
                   />
                   <p className="text-xs text-base-content/60 text-center">
                     Esta imagen ya existe en el sistema
@@ -370,11 +372,11 @@ export default function AdminNewProduct({ product, onClose, onProductAdded }) {
 
             {/* Upload New Images */}
             <div className="card bg-base-100 shadow-lg">
-              <div className="card-body">
-                <h3 className="font-semibold mb-2">Agregar más imágenes</h3>
+              <div className="card-body p-3 md:p-6">
+                <h3 className="font-semibold text-sm md:text-base mb-2">Agregar más imágenes</h3>
                 <div
                   {...getRootProps()}
-                  className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+                  className={`border-2 border-dashed rounded-lg p-4 md:p-6 text-center cursor-pointer transition-colors ${
                     isDragActive
                       ? "border-primary bg-primary/10"
                       : "border-base-300 hover:border-primary"
@@ -383,15 +385,15 @@ export default function AdminNewProduct({ product, onClose, onProductAdded }) {
                   <input {...getInputProps()} />
                   <Upload
                     className="mx-auto mb-2 text-base-content/40"
-                    size={40}
+                    size={32}
                   />
                   {isDragActive ? (
-                    <p className="text-primary text-sm">
+                    <p className="text-primary text-xs md:text-sm">
                       Suelta las imágenes aquí...
                     </p>
                   ) : (
                     <div>
-                      <p className="text-base-content/60 text-sm mb-1">
+                      <p className="text-base-content/60 text-xs md:text-sm mb-1">
                         Arrastra imágenes o haz clic
                       </p>
                       <p className="text-xs text-base-content/40">
@@ -403,24 +405,24 @@ export default function AdminNewProduct({ product, onClose, onProductAdded }) {
 
                 {uploadedImages.length > 0 && (
                   <div className="mt-4">
-                    <p className="text-sm font-semibold mb-2">
+                    <p className="text-xs md:text-sm font-semibold mb-2">
                       Nuevas imágenes ({uploadedImages.length})
                     </p>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-2 md:gap-3">
                       {uploadedImages.map((file, index) => (
                         <div key={index} className="relative group">
                           <img
                             src={file.preview}
                             alt={`Upload ${index + 1}`}
-                            className="w-full h-32 object-cover rounded-lg"
+                            className="w-full h-24 md:h-32 object-cover rounded-lg"
                           />
                           <button
                             onClick={() => removeUploadedImage(index)}
-                            className="absolute top-2 right-2 btn btn-xs btn-circle btn-error opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute top-1 right-1 md:top-2 md:right-2 btn btn-xs btn-circle btn-error opacity-0 group-hover:opacity-100 transition-opacity"
                           >
                             <X size={14} />
                           </button>
-                          <div className="absolute bottom-2 left-2 badge badge-sm badge-success">
+                          <div className="absolute bottom-1 left-1 md:bottom-2 md:left-2 badge badge-xs md:badge-sm badge-success">
                             Nueva
                           </div>
                         </div>
@@ -442,23 +444,23 @@ export default function AdminNewProduct({ product, onClose, onProductAdded }) {
                   : "bg-error/10 border-error"
               }`}
             >
-              <div className="card-body">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
+              <div className="card-body p-4 md:p-6">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 md:gap-4 flex-1">
                     <div
-                      className={`p-3 rounded-full ${
+                      className={`p-2 md:p-3 rounded-full ${
                         enTiendaOnline
                           ? "bg-success text-success-content"
                           : "bg-error text-error-content"
                       }`}
                     >
-                      <Store size={24} />
+                      <Store size={20} className="md:w-6 md:h-6" />
                     </div>
-                    <div>
-                      <h3 className="text-xl font-bold">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base md:text-xl font-bold">
                         Visibilidad en Tienda Online
                       </h3>
-                      <p className="text-sm opacity-80">
+                      <p className="text-xs md:text-sm opacity-80 break-words">
                         {enTiendaOnline
                           ? "✅ Este producto se publicará en la tienda"
                           : "❌ Este producto NO se publicará"}
@@ -467,7 +469,7 @@ export default function AdminNewProduct({ product, onClose, onProductAdded }) {
                   </div>
                   <input
                     type="checkbox"
-                    className="toggle toggle-lg toggle-success"
+                    className="toggle toggle-md md:toggle-lg toggle-success flex-shrink-0"
                     checked={enTiendaOnline}
                     onChange={(e) => setEnTiendaOnline(e.target.checked)}
                   />
@@ -477,23 +479,23 @@ export default function AdminNewProduct({ product, onClose, onProductAdded }) {
 
             {/* Product Information */}
             <div className="card bg-base-100 shadow-lg">
-              <div className="card-body">
-                <h2 className="card-title text-xl font-semibold mb-6">
-                  <Info size={20} className="inline-block mr-2" />
+              <div className="card-body p-4 md:p-6">
+                <h2 className="card-title text-lg md:text-xl font-semibold mb-4 md:mb-6">
+                  <Info size={18} className="md:w-5 md:h-5 inline-block mr-2" />
                   Información del producto
                 </h2>
 
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4 md:space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     <div className="form-control">
                       <label className="label">
-                        <span className="label-text font-bold text-base">
+                        <span className="label-text font-bold text-sm md:text-base">
                           Nombre del producto *
                         </span>
                       </label>
                       <input
                         type="text"
-                        className="input input-bordered input-lg"
+                        className="input input-bordered input-sm md:input-md lg:input-lg"
                         value={formData.nombre_web}
                         onChange={(e) =>
                           setFormData({
@@ -508,18 +510,18 @@ export default function AdminNewProduct({ product, onClose, onProductAdded }) {
 
                     <div className="form-control">
                       <label className="label">
-                        <span className="label-text font-bold text-base">
+                        <span className="label-text font-bold text-sm md:text-base">
                           Precio web *
                         </span>
                       </label>
                       <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold opacity-60">
+                        <span className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-lg md:text-2xl font-bold opacity-60">
                           $
                         </span>
                         <input
                           type="text"
                           inputMode="decimal"
-                          className="input input-bordered input-lg pl-10 font-bold text-xl"
+                          className="input input-bordered input-sm md:input-md lg:input-lg pl-8 md:pl-10 font-bold text-base md:text-xl"
                           value={formData.precio_web}
                           onChange={(e) => {
                             const value = e.target.value;
@@ -539,7 +541,7 @@ export default function AdminNewProduct({ product, onClose, onProductAdded }) {
 
                   <div className="form-control">
                     <label className="label">
-                      <span className="label-text font-semibold text-base">
+                      <span className="label-text font-semibold text-sm md:text-base">
                         Descripción del producto
                       </span>
                       <span className="label-text-alt text-xs opacity-60">
@@ -547,7 +549,7 @@ export default function AdminNewProduct({ product, onClose, onProductAdded }) {
                       </span>
                     </label>
                     <textarea
-                      className="textarea textarea-bordered h-28 text-base"
+                      className="textarea textarea-bordered h-24 md:h-28 text-sm md:text-base"
                       value={formData.descripcion_web}
                       onChange={(e) =>
                         setFormData({
@@ -561,7 +563,7 @@ export default function AdminNewProduct({ product, onClose, onProductAdded }) {
 
                   <div className="form-control">
                     <label className="label">
-                      <span className="label-text font-semibold">
+                      <span className="label-text font-semibold text-sm md:text-base">
                         URL personalizada (Slug)
                       </span>
                       <span className="label-text-alt text-xs opacity-60">
@@ -570,7 +572,7 @@ export default function AdminNewProduct({ product, onClose, onProductAdded }) {
                     </label>
                     <input
                       type="text"
-                      className="input input-bordered"
+                      className="input input-bordered input-sm md:input-md"
                       value={formData.slug}
                       onChange={(e) =>
                         setFormData({ ...formData, slug: e.target.value })
@@ -579,9 +581,9 @@ export default function AdminNewProduct({ product, onClose, onProductAdded }) {
                     />
                     {formData.slug && (
                       <label className="label">
-                        <span className="label-text-alt">
+                        <span className="label-text-alt text-xs">
                           Vista previa:{" "}
-                          <code className="bg-base-200 px-2 py-1 rounded">
+                          <code className="bg-base-200 px-2 py-1 rounded text-xs">
                             /productos/{formData.slug}
                           </code>
                         </span>
@@ -594,19 +596,19 @@ export default function AdminNewProduct({ product, onClose, onProductAdded }) {
 
             {/* Discounts Section */}
             <div className="card bg-base-100 shadow-lg">
-              <div className="card-body">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="card-title text-xl font-semibold">
-                    <Percent size={20} className="inline-block mr-2" />
+              <div className="card-body p-4 md:p-6">
+                <div className="flex flex-col md:flex-row justify-between md:items-center gap-2 md:gap-0 mb-4">
+                  <h2 className="card-title text-lg md:text-xl font-semibold">
+                    <Percent size={18} className="md:w-5 md:h-5 inline-block mr-2" />
                     Descuentos
                   </h2>
                   {formData.descuento > 0 && (
                     <button
                       type="button"
                       onClick={handleRemoveDiscount}
-                      className="btn btn-sm btn-error btn-outline gap-2"
+                      className="btn btn-xs md:btn-sm btn-error btn-outline gap-2 w-full md:w-auto"
                     >
-                      <X size={16} />
+                      <X size={14} className="md:w-4 md:h-4" />
                       Eliminar Descuento
                     </button>
                   )}
@@ -711,9 +713,9 @@ export default function AdminNewProduct({ product, onClose, onProductAdded }) {
 
             {/* Stock Section */}
             <div className="card bg-base-100 shadow-lg">
-              <div className="card-body">
-                <h2 className="card-title text-xl font-semibold mb-4">
-                  <Store size={20} className="inline-block mr-2" />
+              <div className="card-body p-4 md:p-6">
+                <h2 className="card-title text-lg md:text-xl font-semibold mb-4">
+                  <Store size={18} className="md:w-5 md:h-5 inline-block mr-2" />
                   Stock por Sucursal
                 </h2>
 
@@ -738,9 +740,9 @@ export default function AdminNewProduct({ product, onClose, onProductAdded }) {
                             {branch.variants.length} variantes
                           </span>
                         </div>
-                        <div className="collapse-content">
-                          <div className="overflow-x-auto">
-                            <table className="table table-sm table-zebra">
+                          <div className="collapse-content">
+                            <div className="overflow-x-auto">
+                              <table className="table table-xs md:table-sm table-zebra">
                               <thead>
                                 <tr>
                                   <th>Código</th>
