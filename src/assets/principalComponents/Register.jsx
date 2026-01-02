@@ -61,7 +61,7 @@ export default function Register() {
     setResendMessage("");
     
     try {
-      const response = await fetch(`${API_URL}/api/users/resend-verification`, {
+      const response = await fetch(`${API_URL}/auth/resend-verification`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -78,6 +78,7 @@ export default function Register() {
       }
     } catch (error) {
       setResendMessage("✗ Error de conexión con el servidor");
+      console.error("Resend error:", error);
     } finally {
       setIsResending(false);
     }
@@ -167,7 +168,11 @@ export default function Register() {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className={`text-sm mb-4 ${
-                  resendMessage.startsWith("✓") ? "text-success" : "text-error"
+                  resendMessage.startsWith("✓") 
+                    ? "text-success" 
+                    : resendMessage.startsWith("⚠️")
+                    ? "text-warning"
+                    : "text-error"
                 }`}
               >
                 {resendMessage}
