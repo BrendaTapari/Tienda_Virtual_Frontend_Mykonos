@@ -38,6 +38,15 @@ function App() {
   useEffect(() => {
     const preloadData = async () => {
       try {
+        // Verificar si ya se mostró el loader en esta sesión
+        const hasShownLoader = sessionStorage.getItem('hasShownInitialLoader');
+        
+        if (hasShownLoader) {
+          // Si ya se mostró, no mostrar el loader y cargar inmediatamente
+          setIsInitialLoading(false);
+          return;
+        }
+
         const minLoadTime = new Promise((resolve) => setTimeout(resolve, 2000));
 
         const productsPromise = fetchProducts().catch((err) => {
@@ -46,6 +55,9 @@ function App() {
         });
 
         await Promise.all([minLoadTime, productsPromise]);
+        
+        // Marcar que ya se mostró el loader
+        sessionStorage.setItem('hasShownInitialLoader', 'true');
       } catch (error) {
         console.error("Error en precarga:", error);
       } finally {

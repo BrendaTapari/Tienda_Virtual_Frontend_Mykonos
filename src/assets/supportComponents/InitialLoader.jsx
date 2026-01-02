@@ -1,6 +1,14 @@
 import { motion } from "motion/react";
 
 export default function InitialLoader() {
+  // Calcular la longitud aproximada de los paths para la animación
+  // Rectángulo: perímetro = 2 * (300 + 300) = 1200
+  const rectPathLength = 1200;
+  
+  // Path L-shape: calculado aproximadamente
+  // Segmentos: (760-90) + (760-90) + (760-380) + (390-90) = 670 + 670 + 380 + 300 = 2020
+  const lShapePathLength = 2020;
+
   return (
     <motion.div
       initial={{ opacity: 1 }}
@@ -8,35 +16,88 @@ export default function InitialLoader() {
       transition={{ duration: 0.5 }}
       className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-br from-base-100 via-base-200 to-base-300"
     >
-      <div className="flex flex-col items-center gap-6">
-        {/* Logo fijo */}
-        <div className="text-6xl font-bold tracking-widest">
-          <span className="text-primary">MYKONOS</span>
-        </div>
+      <div className="flex flex-col items-center gap-8">
+        {/* Logo animado con SVG */}
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="w-48 h-48"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 800 800"
+            width="100%"
+            height="100%"
+          >
+            {/* Cuadrado completo (superior izquierdo) - animado */}
+            <motion.rect
+              x="40"
+              y="40"
+              width="300"
+              height="300"
+              fill="none"
+              stroke="#FF6B1A"
+              strokeWidth="16"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              initial={{
+                pathLength: 0,
+                opacity: 0,
+              }}
+              animate={{
+                pathLength: [0, 1, 1],
+                opacity: [0, 1, 1],
+              }}
+              transition={{
+                pathLength: {
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  times: [0, 0.5, 1],
+                },
+                opacity: {
+                  duration: 0.3,
+                  repeat: Infinity,
+                  repeatDelay: 1.7,
+                },
+              }}
+            />
 
-        {/* Spinner */}
-        <div className="relative w-24 h-24">
-          <motion.div
-            className="absolute inset-0 border-4 border-primary/30 rounded-full"
-            initial={{ rotate: 0 }}
-            animate={{ rotate: 360 }}
-            transition={{
-              duration: 1,
-              repeat: Infinity,
-              ease: "linear",
-            }}
-          />
-          <motion.div
-            className="absolute inset-0 border-4 border-transparent border-t-primary rounded-full"
-            initial={{ rotate: 0 }}
-            animate={{ rotate: 360 }}
-            transition={{
-              duration: 0.8,
-              repeat: Infinity,
-              ease: "linear",
-            }}
-          />
-        </div>
+            {/* Cuadrado incompleto (forma en L) - animado con delay */}
+            <motion.path
+              d="M 90 390 L 90 760 L 760 760 L 760 90 L 380 90 L 380 390 Z"
+              fill="none"
+              stroke="#FF6B1A"
+              strokeWidth="16"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              initial={{
+                pathLength: 0,
+                opacity: 0,
+              }}
+              animate={{
+                pathLength: [0, 1, 1],
+                opacity: [0, 1, 1],
+              }}
+              transition={{
+                pathLength: {
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 0.3,
+                  times: [0, 0.5, 1],
+                },
+                opacity: {
+                  duration: 0.3,
+                  repeat: Infinity,
+                  repeatDelay: 1.7,
+                  delay: 0.3,
+                },
+              }}
+            />
+          </svg>
+        </motion.div>
 
         {/* Texto de carga */}
         <motion.p

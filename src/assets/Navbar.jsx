@@ -111,7 +111,8 @@ export default function Navbar() {
             className="btn btn-ghost text-2xl md:text-3xl font-light tracking-widest text-base-content"
             onClick={goHome}
           >
-            MYKONOS
+          <img src="logoMks.svg" alt="" className="h-10 w-10 "/>
+            MYKONOS BOUTIQUE
           </a>
         </div>
 

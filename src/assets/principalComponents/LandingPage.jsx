@@ -154,7 +154,7 @@ export default function LandingPage() {
               transition={{ duration: 1, ease: "easeOut" }}
             >
               <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-light tracking-widest mb-4 text-base-content">
-                MYKONOS
+                MYKONOS BOUTIQUE
               </h1>
               <div className="w-24 h-px bg-primary mx-auto mb-8"></div>
             </motion.div>
