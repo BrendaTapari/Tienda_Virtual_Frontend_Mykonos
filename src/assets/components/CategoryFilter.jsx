@@ -207,7 +207,7 @@ export default function CategoryFilter({
                   ${
                     selectedBranch?.id === branch.id
                       ? "bg-primary text-primary-content font-medium"
-                      : "bg-base-300 hover:bg-base-300/70 text-base-content"
+                      : "bg-base-200 hover:bg-base-300/70  text-base-content"
                   }
                 `}
                 whileHover={{ scale: 1.02 }}
@@ -245,7 +245,7 @@ export default function CategoryFilter({
           <motion.button
             onClick={() => onSelectCategory(null)}
             className={`
-          w-full py-2 px-3 rounded-lg mb-3 text-sm font-light tracking-wide
+          w-full py-2 px-3 rounded-lg mb-3 text-sm font-light tracking-wide text-left
           transition-colors duration-200
           ${
             !selectedCategory
