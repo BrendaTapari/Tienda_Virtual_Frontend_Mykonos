@@ -16,9 +16,9 @@ export default function UserInfo() {
 
   const [formData, setFormData] = useState({
     fullname: user?.fullname || "",
-    email: user?.email || "",
     phone: user?.phone || "",
     domicilio: user?.domicilio || "",
+    cuit: user?.cuit || "",
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -258,18 +258,6 @@ export default function UserInfo() {
 
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text">Email</span>
-                  </label>
-                  <input
-                    type="email"
-                    className="input input-bordered"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  />
-                </div>
-
-                <div className="form-control">
-                  <label className="label">
                     <span className="label-text">Teléfono</span>
                   </label>
                   <input
@@ -277,6 +265,19 @@ export default function UserInfo() {
                     className="input input-bordered"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  />
+                </div>
+
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text">CUIT</span>
+                  </label>
+                  <input
+                    type="text"
+                    className="input input-bordered"
+                    value={formData.cuit}
+                    onChange={(e) => setFormData({ ...formData, cuit: e.target.value })}
+                    placeholder="20-12345678-9"
                   />
                 </div>
 

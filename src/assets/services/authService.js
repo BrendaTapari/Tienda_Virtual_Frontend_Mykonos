@@ -156,17 +156,23 @@ export const getCurrentUser = async () => {
 
 /**
  * Update user profile
- * @param {Object} userData - User data to update
+ * @param {Object} userData - User data to update (fullname, phone, domicilio, cuit)
  * @returns {Promise<Object>} Updated user data
  */
 export const updateProfile = async (userData) => {
   try {
     const token = getAuthToken();
+    const user = getUser();
+    
     if (!token) {
       throw new Error("No authentication token found");
     }
+    
+    if (!user || !user.id) {
+      throw new Error("User ID not found");
+    }
 
-    const response = await axios.put(`${API_URL}/me`, userData, {
+    const response = await axios.put(`${API_URL}/users/${user.id}`, userData, {
       headers: { Authorization: `Bearer ${token}` },
     });
 

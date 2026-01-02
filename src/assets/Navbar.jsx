@@ -127,15 +127,6 @@ export default function Navbar() {
             <span className="absolute bottom-0 left-0 w-0 h-px bg-primary transition-all duration-300 group-hover:w-full"></span>
           </motion.button>
 
-          <motion.button
-            className="btn btn-ghost font-light tracking-widest text-base-content hover:text-primary transition-colors relative group"
-            onClick={goToMyPurchases}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            MI COMPRAS
-            <span className="absolute bottom-0 left-0 w-0 h-px bg-primary transition-all duration-300 group-hover:w-full"></span>
-          </motion.button>
 
           <motion.button
             className="btn btn-ghost font-light tracking-widest text-base-content hover:text-primary transition-colors relative group"
@@ -147,33 +138,25 @@ export default function Navbar() {
             <span className="absolute bottom-0 left-0 w-0 h-px bg-primary transition-all duration-300 group-hover:w-full"></span>
           </motion.button>
 
-          <label className="swap swap-rotate">
-            <input
-              type="checkbox"
-              className="theme-controller"
-              checked={theme === "darkMykonos"}
-              onChange={handleToggle}
-            />
-            <Sun className="swap-off h-8 w-8 fill-current" />
-            <Moon className="swap-on h-8 w-8 fill-current" />
-          </label>
-
-          <div className="flex gap-4">
-            <div className="dropdown dropdown-end">
-              <div
+          <div className="dropdown dropdown-end">
+              <motion.div
                 tabIndex={0}
                 role="button"
-                className="btn btn-ghost btn-circle"
+                className="btn btn-ghost tooltip tooltip-bottom font-light tracking-widest text-base-content hover:text-primary transition-colors relative group"
+                data-tip="Carrito"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
                 <div className="indicator">
-                  <ShoppingCart />
+                  <ShoppingCart className="h-5 w-5" />
                   {itemCount > 0 && (
                     <span className="badge badge-sm indicator-item badge-primary">
                       {itemCount}
                     </span>
                   )}
                 </div>
-              </div>
+                <span className="absolute bottom-0 left-0 w-0 h-px bg-primary transition-all duration-300 group-hover:w-full"></span>
+              </motion.div>
               <div
                 tabIndex={0}
                 className="card card-compact dropdown-content bg-base-100 z-1 mt-3 w-52 shadow"
@@ -196,6 +179,23 @@ export default function Navbar() {
                 </div>
               </div>
             </div>
+
+          <motion.button
+            className="btn btn-ghost font-light tracking-widest text-base-content hover:text-primary transition-colors relative group"
+            onClick={() => setTheme(theme === "darkMykonos" ? "lightMykonos" : "darkMykonos")}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            {theme === "darkMykonos" ? (
+              <Sun className="h-5 w-5" />
+            ) : (
+              <Moon className="h-5 w-5" />
+            )}
+            <span className="absolute bottom-0 left-0 w-0 h-px bg-primary transition-all duration-300 group-hover:w-full"></span>
+          </motion.button>
+
+          <div className="flex gap-4">
+            
 
             {/* User Section */}
             <div className="dropdown dropdown-end">
@@ -332,23 +332,7 @@ export default function Navbar() {
                 transition={{ delay: 0.15 }}
               ></motion.div>
 
-              <motion.button
-                className="btn btn-ghost btn-lg justify-start font-light tracking-widest text-base-content text-xl"
-                onClick={goToMyPurchases}
-                initial={{ x: 50, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 0.1 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Mis Compras
-              </motion.button>
-
-              <motion.div
-                className="divider"
-                initial={{ scaleX: 0 }}
-                animate={{ scaleX: 1 }}
-                transition={{ delay: 0.15 }}
-              ></motion.div>
+              
 
               <motion.button
                 className="btn btn-ghost btn-lg justify-start font-light tracking-widest text-base-content text-xl"
@@ -362,23 +346,27 @@ export default function Navbar() {
               </motion.button>
 
               {/* Cart */}
-              <motion.div
-                className="flex items-center justify-between p-4 bg-base-200 rounded-lg"
+              <motion.button
+                className="btn btn-ghost btn-lg justify-start font-light tracking-widest text-base-content text-xl"
+                onClick={goToShoppingCart}
                 initial={{ x: 50, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ delay: 0.2 }}
+                whileTap={{ scale: 0.95 }}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 w-full">
                   <ShoppingCart className="h-6 w-6" />
-                  <div>
-                    <p className="font-semibold">Carrito</p>
-                    <p className="text-sm text-base-content/70">
-                      {itemCount} Items - ${totalPrice}
+                  <div className="flex-1 text-left">
+                    <p className="font-semibold">CARRITO</p>
+                    <p className="text-sm text-base-content/70 font-normal">
+                      {itemCount} Items - ${totalPrice?.toLocaleString("es-AR") || 0}
                     </p>
                   </div>
+                  {itemCount > 0 && (
+                    <span className="badge badge-primary">{itemCount}</span>
+                  )}
                 </div>
-                <span className="badge badge-primary">{itemCount}</span>
-              </motion.div>
+              </motion.button>
 
               {/* Profile Section */}
               <motion.div
