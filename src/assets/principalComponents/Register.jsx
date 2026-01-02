@@ -21,6 +21,11 @@ export default function Register() {
   const [registeredEmail, setRegisteredEmail] = useState("");
   const [isResending, setIsResending] = useState(false);
   const [resendMessage, setResendMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const togglePassword = () => {
+    setShowPassword(!showPassword);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -188,11 +193,6 @@ export default function Register() {
       </div>
     );
   }
-  const [showPassword, setShowPassword] = useState(false);
-
-  const togglePassword = () => {
-    setShowPassword(!showPassword);
-  };
 
   return (
     <div className="min-h-screen bg-base-200 flex items-center justify-center px-4 py-12">
