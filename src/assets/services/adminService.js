@@ -85,6 +85,26 @@ export const changeUserStatus = async (userId, status) => {
   }
 };
 
+/**
+ * Get user activity (Admin only)
+ * @param {number} userId - User ID
+ * @returns {Promise<Object>} User activity data including purchases, products, and statistics
+ */
+export const getUserActivity = async (userId) => {
+  try {
+    const token = getAuthToken();
+    if (!token) throw new Error("Authentication required");
+
+    const response = await axios.get(`${API_URL}/users/${userId}/activity`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching user ${userId} activity:`, error);
+    throw error.response?.data || error;
+  }
+};
+
 // ============================================================================
 // ORDER MANAGEMENT
 // ============================================================================

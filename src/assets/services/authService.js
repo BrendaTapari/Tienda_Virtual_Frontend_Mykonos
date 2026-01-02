@@ -5,7 +5,7 @@
 
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL + "/auth";
+const API_URL = import.meta.env.VITE_API_URL;
 
 // Token management
 export const getAuthToken = () => {
@@ -45,7 +45,7 @@ export const removeUser = () => {
  */
 export const register = async (userData) => {
   try {
-    const response = await axios.post(`${API_URL}/register`, userData);
+    const response = await axios.post(`${API_URL}/auth/register`, userData);
     
     // Save token and user data
     if (response.data.token) {
@@ -84,7 +84,7 @@ export const register = async (userData) => {
  */
 export const login = async (credentials) => {
   try {
-    const response = await axios.post(`${API_URL}/login`, credentials);
+    const response = await axios.post(`${API_URL}/auth/login`, credentials);
     
     // Save token and user data
     if (response.data.token) {
@@ -212,7 +212,7 @@ export const changePassword = async (passwords) => {
  */
 export const verifyEmail = async (token) => {
   try {
-    const response = await axios.post(`${API_URL}/verify-email`, { token });
+    const response = await axios.post(`${API_URL}/auth/verify-email`, { token });
     return response.data;
   } catch (error) {
     console.error("Error verifying email:", error);
